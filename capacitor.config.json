@@ -1,0 +1,25 @@
+{
+  "appId": "com.somaai.app",
+  "appName": "SomaAi",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#0a0a0b",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#0a0a0b"
+    }
+  },
+  "android": {
+    "backgroundColor": "#0a0a0b"
+  }
+}

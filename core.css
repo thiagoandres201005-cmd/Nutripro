@@ -1,0 +1,10 @@
+body {
+  margin: 0;
+  background: #0a0a0b;
+  color: #fff;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+#app-root {
+  min-height: 100dvh;
+}
