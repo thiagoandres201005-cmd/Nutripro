@@ -1,9 +1,9 @@
 /* ============================================================================
-   SomaAi v1.0 — Núcleo (parte 1)
+   SomaAi v1.1 — Núcleo corregido
    ========================================================================== */
 
 const state = {
-  version: '1.0.0',
+  version: '1.1.0',
   platform: 'web',
   date: new Date().toISOString().slice(0, 10),
   water: 0,
@@ -45,6 +45,12 @@ function loadState() {
     if (saved) {
       const parsed = JSON.parse(saved);
       Object.assign(state, parsed);
+      if (parsed.weight && typeof parsed.weight === 'number') {
+        state.weight = parsed.weight;
+      }
+      if (parsed.profile && parsed.profile.weight) {
+        state.profile.weight = parsed.profile.weight;
+      }
     }
     const today = new Date().toISOString().slice(0, 10);
     if (state.date !== today) {
@@ -88,22 +94,36 @@ async function loadAllDatabases() {
   console.log('[SomaAi] Bases cargadas:', state.foodsCount, 'alimentos');
 }
 
+/* ------------------------- Cálculos corregidos ------------------------- */
 function calcTargets(profile) {
-  const base = 10 * profile.weight + 6.25 * profile.height - 5 * profile.age;
+  const w = Number(profile.weight) || 72.4;
+  const h = Number(profile.height) || 168;
+  const a = Number(profile.age) || 28;
+
+  /* TMB Mifflin-St Jeor */
+  const base = 10 * w + 6.25 * h - 5 * a;
   const tmb = Math.round(profile.sex === 'm' ? base + 5 : base - 161);
+
+  /* Factor de actividad */
   const act = { sedentaria: 1.2, ligera: 1.375, moderada: 1.55, alta: 1.725, atleta: 1.9 };
+  const factor = act[profile.activity] || 1.55;
+  const tdee = tmb * factor;
+
+  /* Ajuste por objetivo */
   const adj = { perder: -0.15, mantener: 0, ganar: 0.15 };
-  const tdee = tmb * (act[profile.activity] || 1.55);
-  const kcal = Math.round(tdee * (1 + (adj[profile.goal] || 0)));
+  const targetKcal = Math.round(tdee * (1 + (adj[profile.goal] || 0)));
+
+  /* Distribución de macros según objetivo */
   const ratio = profile.goal === 'ganar' ? { p: 0.30, c: 0.45, f: 0.25 }
               : profile.goal === 'perder' ? { p: 0.35, c: 0.35, f: 0.30 }
               : { p: 0.25, c: 0.50, f: 0.25 };
+
   return {
-    kcal,
-    p: Math.round(kcal * ratio.p / 4),
-    c: Math.round(kcal * ratio.c / 4),
-    f: Math.round(kcal * ratio.f / 9),
-    water: Math.round(profile.weight * 35),
+    kcal: targetKcal,
+    p: Math.round(targetKcal * ratio.p / 4),
+    c: Math.round(targetKcal * ratio.c / 4),
+    f: Math.round(targetKcal * ratio.f / 9),
+    water: Math.round(w * 35),
   };
 }
 
@@ -203,6 +223,7 @@ function renderHoy() {
   const targets = calcTargets(state.profile);
   const totals = calcTotals(state.entries);
   const waterPct = Math.min(100, Math.round((state.water / targets.water) * 100));
+  const weightDisplay = (Number(state.weight) || 72.4).toFixed(1);
   const wrap = el('div', { class: 'stack' });
 
   const card1 = el('div', { class: 'card card-pad' });
@@ -238,7 +259,8 @@ function renderHoy() {
   rings.appendChild(ring(totals.f, targets.f, 'grasa', '#ec4899', '#f59e0b'));
   card2.appendChild(rings);
 
-  const pPerKg = (totals.p / state.profile.weight).toFixed(2);
+  const w = Number(state.profile.weight) || 72.4;
+  const pPerKg = (totals.p / w).toFixed(2);
   const stats = el('div', { class: 'grid g-3', style: { marginTop: '16px', gap: '8px' } });
   stats.appendChild(miniStat('P / kg', pPerKg, 'var(--green)'));
   stats.appendChild(miniStat('Proteína obj.', targets.p + 'g', 'var(--cyan)'));
@@ -293,7 +315,7 @@ function renderHoy() {
       '<button class="btn btn-ghost btn-sm" data-weight-edit>Editar</button>' +
     '</div>' +
     '<div style="display:flex;align-items:baseline;gap:6px;margin-top:8px">' +
-      '<div class="mono" style="font-size:28px;font-weight:800">' + state.weight.toFixed(1) + '</div>' +
+      '<div class="mono" style="font-size:28px;font-weight:800">' + weightDisplay + '</div>' +
       '<span class="muted" style="font-size:12px">kg</span>' +
     '</div>' +
     '<div class="muted2" style="font-size:11px;margin-top:6px">Objetivo: ' + state.profile.goal + '</div>';

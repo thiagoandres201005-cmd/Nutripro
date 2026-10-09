@@ -1,5 +1,5 @@
 /* ============================================================================
-   SomaAi — Onboarding (7 pasos)
+   SomaAi — Onboarding (7 pasos) — v2 corregido
    ========================================================================== */
 
 const OB_SPORTS = [];
@@ -34,9 +34,6 @@ async function obLoadConfig() {
     OB_ACTIVITIES.push(...(data.activities || []));
     OB_GOALS.push(...(data.goals || []));
     OB_SPEEDS.push(...(data.speeds || []));
-    if (OB_SPORTS.length) obDraft.sport = 'ninguno';
-    if (OB_ACTIVITIES.length) obDraft.activity = 'moderada';
-    if (OB_GOALS.length) obDraft.goal = 'mantener';
   } catch (e) {
     console.warn('[Onboarding] Error cargando sports.json:', e.message);
   }
@@ -186,7 +183,7 @@ function obStepBasics() {
         '<span class="eyebrow">Peso actual</span>' +
         '<span class="mono" style="font-weight:800">' + obDraft.weight + ' kg</span>' +
       '</div>' +
-      '<input type="range" id="ob-weight" min="35" max="200" step="0.5" value="' + obDraft.weight + '" style="margin-top:8px;width:100%" />' +
+      '<input type="range" id="ob-weight" min="35" max="200" step="0.1" value="' + obDraft.weight + '" style="margin-top:8px;width:100%" />' +
     '</div>' +
     '<div style="margin-top:20px;padding:12px;background:var(--surface);border-radius:12px;border:1px solid var(--border)">' +
       '<div class="eyebrow">Tu IMC</div>' +
@@ -327,7 +324,10 @@ function obMacroCard(emoji, label, val, color) {
 }
 
 function obCalcTMB() {
-  const base = 10 * obDraft.weight + 6.25 * obDraft.height - 5 * obDraft.age;
+  const w = Number(obDraft.weight) || 72.4;
+  const h = Number(obDraft.height) || 168;
+  const a = Number(obDraft.age) || 28;
+  const base = 10 * w + 6.25 * h - 5 * a;
   return Math.round(obDraft.sex === 'm' ? base + 5 : base - 161);
 }
 
@@ -361,11 +361,11 @@ function obAttachHandlers() {
     b.onclick = () => { obDraft.sex = b.dataset.sex; obRender(); };
   });
   const ageEl = document.getElementById('ob-age');
-  if (ageEl) ageEl.oninput = (e) => { obDraft.age = +e.target.value; obRender(); };
+  if (ageEl) ageEl.oninput = (e) => { obDraft.age = parseFloat(e.target.value); obRender(); };
   const hEl = document.getElementById('ob-height');
-  if (hEl) hEl.oninput = (e) => { obDraft.height = +e.target.value; obRender(); };
+  if (hEl) hEl.oninput = (e) => { obDraft.height = parseFloat(e.target.value); obRender(); };
   const wEl = document.getElementById('ob-weight');
-  if (wEl) wEl.oninput = (e) => { obDraft.weight = +e.target.value; obRender(); };
+  if (wEl) wEl.oninput = (e) => { obDraft.weight = parseFloat(e.target.value); obRender(); };
   const nameEl = document.getElementById('ob-name');
   if (nameEl) nameEl.oninput = (e) => { obDraft.name = e.target.value; };
   const emailEl = document.getElementById('ob-email');
@@ -388,7 +388,7 @@ function obAttachHandlers() {
     b.onclick = () => { obDraft.goal = b.dataset.goal; obRender(); };
   });
   document.querySelectorAll('[data-speed]').forEach((b) => {
-    b.onclick = () => { obDraft.speed = +b.dataset.speed; obRender(); };
+    b.onclick = () => { obDraft.speed = parseFloat(b.dataset.speed); obRender(); };
   });
 }
 
@@ -411,26 +411,25 @@ function obBack() {
 function obFinish() {
   const S = window.SomaAi;
   if (!S) return;
-  const tmb = obCalcTMB();
-  const tdee = obCalcTDEE(tmb);
-  const sport = OB_SPORTS.find((s) => s.id === obDraft.sport) || OB_SPORTS[0];
-  const goal = OB_GOALS.find((g) => g.id === obDraft.goal) || OB_GOALS[1];
+  const weight = Number(obDraft.weight) || 72.4;
+  const height = Number(obDraft.height) || 168;
+  const age = Number(obDraft.age) || 28;
   S.state.profile = {
     name: obDraft.name || 'Usuario',
-    sex: obDraft.sex,
-    age: obDraft.age,
-    height: obDraft.height,
-    weight: obDraft.weight,
-    activity: obDraft.activity,
-    goal: obDraft.goal,
-    sport: obDraft.sport,
-    speed: obDraft.speed,
+    sex: obDraft.sex || 'f',
+    age: age,
+    height: height,
+    weight: weight,
+    activity: obDraft.activity || 'moderada',
+    goal: obDraft.goal || 'mantener',
+    sport: obDraft.sport || 'ninguno',
+    speed: obDraft.speed || 0.5,
     streak: 1,
     onboarded: true,
     onboardedAt: new Date().toISOString(),
     email: obDraft.email || null,
   };
-  S.state.weight = obDraft.weight;
+  S.state.weight = weight;
   S.state.entries = [];
   S.state.water = 0;
   S.saveState();
