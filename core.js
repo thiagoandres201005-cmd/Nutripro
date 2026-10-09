@@ -1,8 +1,7 @@
 /* ============================================================================
-   SomaAi v1.0 — Núcleo definitivo con Onboarding integrado
+   SomaAi v1.0 — Núcleo (parte 1)
    ========================================================================== */
 
-/* ------------------------- Estado global ------------------------- */
 const state = {
   version: '1.0.0',
   platform: 'web',
@@ -27,7 +26,6 @@ const state = {
   foodsCount: 0,
 };
 
-/* ------------------------- Persistencia ------------------------- */
 function saveState() {
   try {
     const toSave = {
@@ -58,7 +56,6 @@ function loadState() {
   } catch (e) {}
 }
 
-/* ------------------------- Bases de datos ------------------------- */
 const DATABASES = [
   './data/database.json',
   './data/db-marcas-lacteos.json',
@@ -91,7 +88,6 @@ async function loadAllDatabases() {
   console.log('[SomaAi] Bases cargadas:', state.foodsCount, 'alimentos');
 }
 
-/* ------------------------- Cálculos ------------------------- */
 function calcTargets(profile) {
   const base = 10 * profile.weight + 6.25 * profile.height - 5 * profile.age;
   const tmb = Math.round(profile.sex === 'm' ? base + 5 : base - 161);
@@ -136,7 +132,6 @@ function calcTotals(entries) {
   };
 }
 
-/* ------------------------- Helpers DOM ------------------------- */
 function el(tag, props, children) {
   const node = document.createElement(tag);
   if (props) {
@@ -198,7 +193,12 @@ function renderComingSoon(title, icon, desc) {
   return wrap;
 }
 
-/* VISTA HOY */
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[c]);
+}
+
 function renderHoy() {
   const targets = calcTargets(state.profile);
   const totals = calcTotals(state.entries);
@@ -221,7 +221,7 @@ function renderHoy() {
       '</div>' +
       '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">' +
         '<span class="pill">🔥 ' + state.profile.streak + ' días</span>' +
-        '<span class="pill green">✓ ' + (state.profile.name || 'Usuario') + '</span>' +
+        '<span class="pill green">✓ ' + escapeHtml(state.profile.name || 'Usuario') + '</span>' +
       '</div>' +
     '</div>' +
     '<div class="bar" style="margin-top:20px;height:10px">' +
@@ -330,23 +330,65 @@ function renderHoy() {
     '</div>';
   wrap.appendChild(mealsCard);
 
+  if (state.entries.length > 0) {
+    const listCard = el('div', { class: 'card card-pad' });
+    let html =
+      '<div class="eyebrow" style="margin-bottom:12px">Alimentos de hoy · ' + state.entries.length + '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px">';
+    state.entries.forEach((e, i) => {
+      const food = state.foods.find((f) => f.id === e.foodId) || e.food;
+      if (!food) return;
+      const k = e.grams / 100;
+      html +=
+        '<div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;' +
+          'background:var(--surface);border:1px solid var(--border)">' +
+          '<div style="width:36px;height:36px;border-radius:10px;background:var(--card2);' +
+            'border:1px solid var(--border);display:grid;place-items:center;font-size:16px">' + (food.emoji || '🍽️') + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+              escapeHtml(food.name) + ' · ' + e.grams + 'g' +
+            '</div>' +
+            '<div style="display:flex;gap:6px;margin-top:3px;font-size:10px">' +
+              '<span class="pill mono" style="font-size:9px">' + Math.round((food.kcal || 0) * k) + ' kcal</span>' +
+              '<span class="pill" style="font-size:9px">' + e.meal + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<button class="icon-btn" data-remove="' + i + '" style="width:28px;height:28px;font-size:11px">✕</button>' +
+        '</div>';
+    });
+    html += '</div>';
+    listCard.innerHTML = html;
+    wrap.appendChild(listCard);
+
+    setTimeout(() => {
+      document.querySelectorAll('[data-remove]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = +btn.dataset.remove;
+          state.entries.splice(i, 1);
+          saveState();
+          render();
+        };
+      });
+    }, 0);
+  }
+
   return wrap;
 }
 
-/* ------------------------- Tabs ------------------------- */
 const TABS = [
   { id: 'hoy', icon: '🏠', label: 'Hoy', render: renderHoy },
-  { id: 'buscar', icon: '🔍', label: 'Buscar', render: () => renderComingSoon('Buscar', '🔍', 'Búsqueda en ' + state.foodsCount + ' alimentos. Requiere cargar bases de datos.') },
-  { id: 'camara', icon: '📷', label: 'Cámara', render: () => renderComingSoon('Cámara', '📷', 'Escaneo de códigos de barras con la cámara del celular.') },
-  { id: 'ia', icon: '🧠', label: 'IA', render: () => renderComingSoon('IA', '🧠', 'Asistente inteligente que conoce tus datos.') },
+  { id: 'buscar', icon: '🔍', label: 'Buscar', render: () => {
+      if (window.SomaAiSearch) return window.SomaAiSearch.render();
+      return renderComingSoon('Buscar', '🔍', 'Cargando buscador...');
+    } },
+  { id: 'camara', icon: '📷', label: 'Cámara', render: () => renderComingSoon('Cámara', '📷', 'Escaneo de códigos de barras.') },
+  { id: 'ia', icon: '🧠', label: 'IA', render: () => renderComingSoon('IA', '🧠', 'Asistente inteligente.') },
   { id: 'perfil', icon: '👤', label: 'Perfil', render: () => renderComingSoon('Perfil', '👤', 'Datos personales y objetivos.') },
 ];
 
 let currentTab = 'hoy';
 
-/* ------------------------- Render principal ------------------------- */
 function render() {
-  // Si NO pasó por onboarding, mostrar onboarding
   if (!state.profile.onboarded && window.SomaAiOnboarding) {
     window.SomaAiOnboarding.render();
     return;
@@ -432,7 +474,6 @@ function render() {
   });
 }
 
-/* ------------------------- API pública ------------------------- */
 window.SomaAi = {
   state,
   saveState,
@@ -443,7 +484,6 @@ window.SomaAi = {
   reloadFoods: loadAllDatabases,
 };
 
-/* ------------------------- Init ------------------------- */
 async function init() {
   try {
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
@@ -453,15 +493,12 @@ async function init() {
 
   loadState();
 
-  // Cargar config del onboarding (sports.json)
   if (window.SomaAiOnboarding) {
     await window.SomaAiOnboarding.loadConfig();
   }
 
-  // Renderizar (decide onboarding o dashboard)
   render();
 
-  // Cargar bases de datos en background
   loadAllDatabases().then(() => {
     if (state.profile.onboarded) render();
   }).catch((err) => {

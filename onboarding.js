@@ -34,7 +34,6 @@ async function obLoadConfig() {
     OB_ACTIVITIES.push(...(data.activities || []));
     OB_GOALS.push(...(data.goals || []));
     OB_SPEEDS.push(...(data.speeds || []));
-    // Valores por defecto
     if (OB_SPORTS.length) obDraft.sport = 'ninguno';
     if (OB_ACTIVITIES.length) obDraft.activity = 'moderada';
     if (OB_GOALS.length) obDraft.goal = 'mantener';
@@ -49,12 +48,10 @@ function obRender() {
   const root = document.getElementById('app-root');
   if (!root) return;
   root.innerHTML = '';
-
   const container = document.createElement('div');
   container.className = 'app';
   container.style.paddingTop = 'var(--safe-top)';
   container.style.paddingBottom = 'var(--safe-bottom)';
-
   const inner = document.createElement('div');
   inner.className = 'container';
   inner.style.paddingTop = '24px';
@@ -62,11 +59,9 @@ function obRender() {
   inner.style.minHeight = '100dvh';
   inner.style.display = 'flex';
   inner.style.flexDirection = 'column';
-
   inner.appendChild(obBuildProgress());
   inner.appendChild(obBuildStep(OB_STEPS[obStep]));
   inner.appendChild(obBuildNav());
-
   container.appendChild(inner);
   root.appendChild(container);
   obAttachHandlers();
@@ -168,8 +163,8 @@ function obStepBasics() {
     '<div style="margin-top:16px">' +
       '<span class="eyebrow">Sexo biológico</span>' +
       '<div style="display:flex;gap:8px;margin-top:8px">' +
-        '<button class="ob-choice ' + (obDraft.sex === 'f' ? 'on' : '') + '" data-sex="f" style="flex:1">♀ Femenino</button>' +
-        '<button class="ob-choice ' + (obDraft.sex === 'm' ? 'on' : '') + '" data-sex="m" style="flex:1">♂ Masculino</button>' +
+        '<button class="ob-choice chip-btn ' + (obDraft.sex === 'f' ? 'on' : '') + '" data-sex="f" style="flex:1;height:44px">♀ Femenino</button>' +
+        '<button class="ob-choice chip-btn ' + (obDraft.sex === 'm' ? 'on' : '') + '" data-sex="m" style="flex:1;height:44px">♂ Masculino</button>' +
       '</div>' +
     '</div>' +
     '<div style="margin-top:16px">' +
@@ -209,7 +204,7 @@ function obStepSport() {
     '<div class="grid g-2" style="margin-top:16px;gap:8px">';
   OB_SPORTS.forEach((s) => {
     const on = obDraft.sport === s.id;
-    html += '<button class="ob-sport ' + (on ? 'on' : '') + '" data-sport="' + s.id + '">' +
+    html += '<button class="ob-sport chip-btn ' + (on ? 'on' : '') + '" data-sport="' + s.id + '" style="height:auto;padding:12px 8px;display:flex;flex-direction:column;align-items:center">' +
       '<div style="font-size:24px">' + s.emoji + '</div>' +
       '<div style="font-size:12px;font-weight:700;margin-top:6px">' + s.name + '</div>' +
       '<div class="muted2" style="font-size:9px;margin-top:3px;text-align:center;line-height:1.2">' + s.desc + '</div>' +
@@ -229,7 +224,7 @@ function obStepActivity() {
     '<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">';
   OB_ACTIVITIES.forEach((a) => {
     const on = obDraft.activity === a.id;
-    html += '<button class="ob-activity ' + (on ? 'on' : '') + '" data-activity="' + a.id + '">' +
+    html += '<button class="ob-activity chip-btn ' + (on ? 'on' : '') + '" data-activity="' + a.id + '" style="height:auto;padding:12px;display:flex;align-items:center;gap:12px">' +
       '<div style="flex:1;text-align:left">' +
         '<div style="font-size:13px;font-weight:700">' + a.name + '</div>' +
         '<div class="muted2" style="font-size:11px;margin-top:2px">' + a.desc + '</div>' +
@@ -251,7 +246,7 @@ function obStepGoal() {
     '<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">';
   OB_GOALS.forEach((g) => {
     const on = obDraft.goal === g.id;
-    html += '<button class="ob-goal ' + (on ? 'on' : '') + '" data-goal="' + g.id + '">' +
+    html += '<button class="ob-goal chip-btn ' + (on ? 'on' : '') + '" data-goal="' + g.id + '" style="height:auto;padding:12px;display:flex;align-items:center;gap:12px">' +
       '<div style="font-size:22px">' + g.emoji + '</div>' +
       '<div style="flex:1;text-align:left">' +
         '<div style="font-size:13px;font-weight:700">' + g.name + '</div>' +
@@ -267,7 +262,7 @@ function obStepGoal() {
       '<div style="display:flex;gap:8px;margin-top:8px">';
     OB_SPEEDS.forEach((s) => {
       const on = obDraft.speed === s.value;
-      html += '<button class="ob-speed ' + (on ? 'on' : '') + '" data-speed="' + s.value + '" style="flex:1">' +
+      html += '<button class="ob-speed chip-btn ' + (on ? 'on' : '') + '" data-speed="' + s.value + '" style="flex:1;height:auto;padding:12px 8px;display:flex;flex-direction:column;align-items:center">' +
         '<div style="font-size:18px">' + s.emoji + '</div>' +
         '<div style="font-size:11px;font-weight:700;margin-top:4px">' + s.name + '</div>' +
       '</button>';
@@ -365,14 +360,12 @@ function obAttachHandlers() {
   document.querySelectorAll('[data-sex]').forEach((b) => {
     b.onclick = () => { obDraft.sex = b.dataset.sex; obRender(); };
   });
-
   const ageEl = document.getElementById('ob-age');
   if (ageEl) ageEl.oninput = (e) => { obDraft.age = +e.target.value; obRender(); };
   const hEl = document.getElementById('ob-height');
   if (hEl) hEl.oninput = (e) => { obDraft.height = +e.target.value; obRender(); };
   const wEl = document.getElementById('ob-weight');
   if (wEl) wEl.oninput = (e) => { obDraft.weight = +e.target.value; obRender(); };
-
   const nameEl = document.getElementById('ob-name');
   if (nameEl) nameEl.oninput = (e) => { obDraft.name = e.target.value; };
   const emailEl = document.getElementById('ob-email');
@@ -388,15 +381,12 @@ function obAttachHandlers() {
       obRender();
     };
   });
-
   document.querySelectorAll('[data-activity]').forEach((b) => {
     b.onclick = () => { obDraft.activity = b.dataset.activity; obRender(); };
   });
-
   document.querySelectorAll('[data-goal]').forEach((b) => {
     b.onclick = () => { obDraft.goal = b.dataset.goal; obRender(); };
   });
-
   document.querySelectorAll('[data-speed]').forEach((b) => {
     b.onclick = () => { obDraft.speed = +b.dataset.speed; obRender(); };
   });
@@ -425,7 +415,6 @@ function obFinish() {
   const tdee = obCalcTDEE(tmb);
   const sport = OB_SPORTS.find((s) => s.id === obDraft.sport) || OB_SPORTS[0];
   const goal = OB_GOALS.find((g) => g.id === obDraft.goal) || OB_GOALS[1];
-
   S.state.profile = {
     name: obDraft.name || 'Usuario',
     sex: obDraft.sex,
