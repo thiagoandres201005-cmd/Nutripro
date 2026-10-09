@@ -405,7 +405,7 @@ const TABS = [
     } },
   { id: 'camara', icon: '📷', label: 'Cámara', render: () => renderComingSoon('Cámara', '📷', 'Escaneo de códigos de barras.') },
   { id: 'ia', icon: '🧠', label: 'IA', render: () => renderComingSoon('IA', '🧠', 'Asistente inteligente.') },
-  { id: 'perfil', icon: '👤', label: 'Perfil', render: () => renderComingSoon('Perfil', '👤', 'Datos personales y objetivos.') },
+  { id: "perfil", icon: "👤", label: "Perfil", render: () => { if (window.SomaAiProfile) return window.SomaAiProfile.render(); return renderComingSoon("Perfil", "👤", "Cargando..."); } },
 ];
 
 let currentTab = 'hoy';
