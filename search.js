@@ -1,5 +1,7 @@
 /* ============================================================================
-   SomaAi — Buscador de alimentos con fuzzy search
+   SomaAi — Buscador v2
+   - No corta el texto al escribir (mantiene foco y cursor)
+   - Solo re-renderiza la lista de resultados, no todo
    ========================================================================== */
 
 const SEARCH_STATE = {
@@ -77,7 +79,7 @@ function searchFoods(query, limit = 50) {
   return scored.slice(0, limit).map((x) => x.food);
 }
 
-const CATEGORIES = [
+const SEARCH_CATEGORIES = [
   { id: 'todas', label: 'Todas', emoji: '🌐' },
   { id: 'frutas', label: 'Frutas', emoji: '🍎' },
   { id: 'verduras', label: 'Verduras', emoji: '🥦' },
@@ -91,7 +93,7 @@ const CATEGORIES = [
   { id: 'condimentos', label: 'Condimentos', emoji: '🧂' },
 ];
 
-function filterByCategory(foods, catId) {
+function filterSearchByCategory(foods, catId) {
   if (catId === 'todas') return foods;
   const keywords = {
     frutas: ['fruta', 'manzana', 'banana', 'naranja', 'pera', 'uva', 'frutilla', 'kiwi', 'palta'],
@@ -112,7 +114,7 @@ function filterByCategory(foods, catId) {
   });
 }
 
-function escapeHtml(s) {
+function escapeHtmlSearch(s) {
   return String(s || '').replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   })[c]);
@@ -121,101 +123,113 @@ function escapeHtml(s) {
 function renderSearch() {
   const S = window.SomaAi;
   if (!S) return document.createElement('div');
-  const wrap = S.el('div', { class: 'stack' });
+  const wrap = S.el('div', { class: 'stack', style: { overflowX: 'hidden', maxWidth: '100%' } });
 
-  const searchCard = S.el('div', { class: 'card card-pad' });
-  searchCard.style.position = 'sticky';
-  searchCard.style.top = '65px';
-  searchCard.style.zIndex = '20';
   const totalFoods = S.state.foods.length;
+
+  /* Barra de búsqueda (SOLO se crea una vez) */
+  const searchCard = S.el('div', { class: 'card card-pad', style: {
+    position: 'sticky', top: '65px', zIndex: '20',
+    overflow: 'hidden', maxWidth: '100%',
+  }});
   searchCard.innerHTML =
-    '<div class="eyebrow">🔍 Buscar alimentos</div>' +
-    '<div style="margin-top:12px;position:relative">' +
+    '<div class="eyebrow" style="word-break:break-word">🔍 Buscar alimentos</div>' +
+    '<div style="margin-top:12px;position:relative;max-width:100%">' +
       '<input type="text" id="search-input" class="input" ' +
-        'placeholder="Buscar: empanada, coca cola, yogur..." ' +
-        'value="' + escapeHtml(SEARCH_STATE.query) + '" ' +
-        'style="padding-left:44px;padding-right:44px" autocomplete="off" spellcheck="false" />' +
+        'placeholder="Buscar..." ' +
+        'style="padding-left:44px;padding-right:44px;width:100%;box-sizing:border-box" ' +
+        'autocomplete="off" spellcheck="false" autocorrect="off" />' +
       '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px">🔍</span>' +
-      (SEARCH_STATE.query
-        ? '<button id="search-clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);' +
-          'width:28px;height:28px;border-radius:50%;background:var(--card2);border:1px solid var(--border);' +
-          'color:var(--muted);font-size:12px;cursor:pointer">✕</button>'
-        : '') +
+      '<button id="search-clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);' +
+        'width:28px;height:28px;border-radius:50%;background:var(--card2);border:1px solid var(--border);' +
+        'color:var(--muted);font-size:12px;cursor:pointer;display:none">✕</button>' +
     '</div>' +
-    '<div class="muted2" style="font-size:11px;margin-top:10px">' +
-      '<strong>' + totalFoods + ' alimentos</strong> en la base · Búsqueda inteligente' +
+    '<div class="muted2" style="font-size:11px;margin-top:10px;word-break:break-word">' +
+      '<strong>' + totalFoods + ' alimentos</strong> disponibles' +
     '</div>';
   wrap.appendChild(searchCard);
 
-  const chipsCard = S.el('div', { class: 'chips-row' });
-  chipsCard.style.marginTop = '12px';
-  chipsCard.innerHTML = CATEGORIES.map((c) =>
+  /* Chips de categorías */
+  const chipsCard = S.el('div', { class: 'chips-row', style: { marginTop: '12px', maxWidth: '100%' } });
+  chipsCard.innerHTML = SEARCH_CATEGORIES.map((c) =>
     '<button class="chip-btn' + (SEARCH_STATE.category === c.id ? ' on' : '') + '" data-cat="' + c.id + '">' +
       c.emoji + ' ' + c.label + '</button>'
   ).join('');
   wrap.appendChild(chipsCard);
 
-  if (SEARCH_STATE.query.length >= 2) {
-    let results = searchFoods(SEARCH_STATE.query, 60);
-    results = filterByCategory(results, SEARCH_STATE.category);
+  /* Contenedor de resultados (SOLO esto se re-renderiza) */
+  const resultsContainer = S.el('div', { id: 'search-results-container', style: {
+    marginTop: '12px', maxWidth: '100%', overflowX: 'hidden',
+  }});
+  wrap.appendChild(resultsContainer);
 
-    if (results.length === 0) {
-      const emptyCard = S.el('div', { class: 'card card-pad', style: { textAlign: 'center', padding: '48px 24px' } });
-      emptyCard.innerHTML =
-        '<div style="font-size:48px">🔍</div>' +
-        '<div class="h2" style="margin-top:16px">Sin resultados</div>' +
-        '<div class="muted" style="font-size:12px;margin-top:8px">' +
-          'No encontramos "' + escapeHtml(SEARCH_STATE.query) + '".<br>Probá con otro término.' +
-        '</div>';
-      wrap.appendChild(emptyCard);
-    } else {
-      const resultsCard = S.el('div', { class: 'card card-pad', style: { marginTop: '12px' } });
-      let html =
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-          '<div class="eyebrow">Resultados</div>' +
-          '<span class="pill" style="font-size:10px">' + results.length + '</span>' +
-        '</div>' +
-        '<div style="display:flex;flex-direction:column;gap:8px">';
-      results.slice(0, 40).forEach((f, i) => {
-        const brand = f.brand ? escapeHtml(f.brand) : '';
-        html +=
-          '<button class="search-result" data-idx="' + i + '">' +
-            '<div style="width:44px;height:44px;border-radius:12px;background:var(--card2);' +
-              'border:1px solid var(--border);display:grid;place-items:center;font-size:20px;flex-shrink:0">' +
-              (f.emoji || '🍽️') + '</div>' +
-            '<div style="flex:1;min-width:0;text-align:left">' +
-              '<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
-                escapeHtml(f.name) + '</div>' +
-              '<div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">' +
-                '<span class="pill mono" style="font-size:10px">' + (f.kcal || 0) + ' kcal</span>' +
-                (brand ? '<span class="pill" style="font-size:10px">' + brand + '</span>' : '') +
-                '<span class="pill green mono" style="font-size:10px">P ' + (f.p || 0) + 'g</span>' +
-              '</div>' +
-            '</div>' +
-            '<div style="color:var(--muted2);font-size:18px">+</div>' +
-          '</button>';
-      });
-      html += '</div>';
-      resultsCard.innerHTML = html;
-      wrap.appendChild(resultsCard);
+  /* Renderizar los resultados iniciales */
+  setTimeout(() => {
+    const input = document.getElementById('search-input');
+    const clearBtn = document.getElementById('search-clear');
 
-      setTimeout(() => {
-        document.querySelectorAll('.search-result').forEach((btn) => {
-          btn.onclick = () => {
-            const idx = +btn.dataset.idx;
-            const food = results[idx];
-            if (food) openAddModal(food);
-          };
-        });
-      }, 0);
+    /* Restaurar valor anterior si había */
+    if (input && SEARCH_STATE.query) {
+      input.value = SEARCH_STATE.query;
+      if (clearBtn) clearBtn.style.display = 'grid';
     }
-  } else {
-    const hintCard = S.el('div', { class: 'card card-pad', style: { textAlign: 'center', padding: '48px 24px' } });
+
+    renderSearchResultsOnly();
+
+    /* Input handler — NO re-renderiza el input */
+    if (input) {
+      let debounce;
+      input.oninput = (e) => {
+        SEARCH_STATE.query = e.target.value;
+        if (clearBtn) clearBtn.style.display = e.target.value ? 'grid' : 'none';
+        clearTimeout(debounce);
+        debounce = setTimeout(() => renderSearchResultsOnly(), 200);
+      };
+      if (!SEARCH_STATE.query) input.focus();
+    }
+
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        SEARCH_STATE.query = '';
+        const inp = document.getElementById('search-input');
+        if (inp) { inp.value = ''; inp.focus(); }
+        clearBtn.style.display = 'none';
+        renderSearchResultsOnly();
+      };
+    }
+
+    document.querySelectorAll('[data-cat]').forEach((btn) => {
+      btn.onclick = () => {
+        SEARCH_STATE.category = btn.dataset.cat;
+        document.querySelectorAll('[data-cat]').forEach((b) => {
+          b.classList.toggle('on', b.dataset.cat === SEARCH_STATE.category);
+        });
+        renderSearchResultsOnly();
+      };
+    });
+  }, 0);
+
+  return wrap;
+}
+
+/* Solo re-renderiza el contenedor de resultados */
+function renderSearchResultsOnly() {
+  const S = window.SomaAi;
+  if (!S) return;
+  const container = document.getElementById('search-results-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (SEARCH_STATE.query.length < 2) {
+    /* Estado inicial: sugerencias */
+    const hintCard = S.el('div', { class: 'card card-pad', style: {
+      textAlign: 'center', padding: '48px 24px', maxWidth: '100%', boxSizing: 'border-box',
+    }});
     hintCard.innerHTML =
       '<div style="font-size:48px">🔍</div>' +
-      '<div class="h2" style="margin-top:16px">Escribí para buscar</div>' +
-      '<div class="muted" style="font-size:12px;margin-top:8px">' +
-        'Tenemos <strong>' + totalFoods + ' alimentos</strong> disponibles' +
+      '<div class="h2" style="margin-top:16px;word-break:break-word">Escribí para buscar</div>' +
+      '<div class="muted" style="font-size:12px;margin-top:8px;word-break:break-word">' +
+        'Tenemos <strong>' + S.state.foods.length + ' alimentos</strong> disponibles' +
       '</div>' +
       '<div style="margin-top:20px">' +
         '<div class="eyebrow" style="margin-bottom:10px">Ejemplos</div>' +
@@ -225,57 +239,81 @@ function renderSearch() {
             .join('') +
         '</div>' +
       '</div>';
-    wrap.appendChild(hintCard);
+    container.appendChild(hintCard);
 
-    setTimeout(() => {
-      document.querySelectorAll('[data-quick]').forEach((btn) => {
-        btn.onclick = () => {
-          SEARCH_STATE.query = btn.dataset.quick;
-          renderSearch_reRender();
-        };
-      });
-    }, 0);
-  }
-
-  setTimeout(() => {
-    const input = document.getElementById('search-input');
-    if (input) {
-      let debounce;
-      input.oninput = (e) => {
-        SEARCH_STATE.query = e.target.value;
-        clearTimeout(debounce);
-        debounce = setTimeout(() => renderSearch_reRender(), 250);
-      };
-      if (!SEARCH_STATE.query) input.focus();
-    }
-    const clearBtn = document.getElementById('search-clear');
-    if (clearBtn) {
-      clearBtn.onclick = () => {
-        SEARCH_STATE.query = '';
-        renderSearch_reRender();
-      };
-    }
-    document.querySelectorAll('[data-cat]').forEach((btn) => {
+    container.querySelectorAll('[data-quick]').forEach((btn) => {
       btn.onclick = () => {
-        SEARCH_STATE.category = btn.dataset.cat;
-        renderSearch_reRender();
+        SEARCH_STATE.query = btn.dataset.quick;
+        const inp = document.getElementById('search-input');
+        if (inp) inp.value = btn.dataset.quick;
+        const cb = document.getElementById('search-clear');
+        if (cb) cb.style.display = 'grid';
+        renderSearchResultsOnly();
       };
     });
-  }, 0);
+    return;
+  }
 
-  return wrap;
+  /* Buscar y filtrar */
+  let results = searchFoods(SEARCH_STATE.query, 60);
+  results = filterSearchByCategory(results, SEARCH_STATE.category);
+
+  if (results.length === 0) {
+    const emptyCard = S.el('div', { class: 'card card-pad', style: {
+      textAlign: 'center', padding: '48px 24px', maxWidth: '100%', boxSizing: 'border-box',
+    }});
+    emptyCard.innerHTML =
+      '<div style="font-size:48px">🔍</div>' +
+      '<div class="h2" style="margin-top:16px;word-break:break-word">Sin resultados</div>' +
+      '<div class="muted" style="font-size:12px;margin-top:8px;word-break:break-word">' +
+        'No encontramos "' + escapeHtmlSearch(SEARCH_STATE.query) + '"' +
+      '</div>';
+    container.appendChild(emptyCard);
+    return;
+  }
+
+  const resultsCard = S.el('div', { class: 'card card-pad', style: {
+    maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden',
+  }});
+  let html =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">' +
+      '<div class="eyebrow">Resultados</div>' +
+      '<span class="pill" style="font-size:10px">' + results.length + '</span>' +
+    '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;max-width:100%">';
+  results.slice(0, 40).forEach((f, i) => {
+    const brand = f.brand ? escapeHtmlSearch(f.brand) : '';
+    html +=
+      '<button class="search-result" data-idx="' + i + '" style="max-width:100%;box-sizing:border-box">' +
+        '<div style="width:44px;height:44px;border-radius:12px;background:var(--card2);' +
+          'border:1px solid var(--border);display:grid;place-items:center;font-size:20px;flex-shrink:0">' +
+          (f.emoji || '🍽️') + '</div>' +
+        '<div style="flex:1;min-width:0;text-align:left;overflow:hidden">' +
+          '<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+            escapeHtmlSearch(f.name) + '</div>' +
+          '<div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">' +
+            '<span class="pill mono" style="font-size:10px">' + (f.kcal || 0) + ' kcal</span>' +
+            (brand ? '<span class="pill" style="font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + brand + '</span>' : '') +
+            '<span class="pill green mono" style="font-size:10px">P ' + (f.p || 0) + 'g</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="color:var(--muted2);font-size:18px">+</div>' +
+      '</button>';
+  });
+  html += '</div>';
+  resultsCard.innerHTML = html;
+  container.appendChild(resultsCard);
+
+  container.querySelectorAll('.search-result').forEach((btn) => {
+    btn.onclick = () => {
+      const idx = +btn.dataset.idx;
+      const food = results[idx];
+      if (food) openAddModalSearch(food);
+    };
+  });
 }
 
-function renderSearch_reRender() {
-  const S = window.SomaAi;
-  if (!S) return;
-  const main = document.querySelector('main.container');
-  if (!main) return;
-  main.innerHTML = '';
-  main.appendChild(renderSearch());
-}
-
-function openAddModal(food) {
+function openAddModalSearch(food) {
   const S = window.SomaAi;
   if (!S) return;
   const modal = S.el('div', { class: 'modal-bg' });
@@ -284,13 +322,13 @@ function openAddModal(food) {
     '<div class="modal">' +
       '<div class="handle"></div>' +
       '<div class="body">' +
-        '<div style="display:flex;gap:12px;align-items:flex-start">' +
+        '<div style="display:flex;gap:12px;align-items:flex-start;max-width:100%">' +
           '<div style="width:64px;height:64px;border-radius:14px;background:var(--surface);' +
             'border:1px solid var(--border);display:grid;place-items:center;font-size:28px;flex-shrink:0">' +
             (food.emoji || '🍽️') + '</div>' +
-          '<div style="flex:1;min-width:0">' +
-            '<div style="font-size:14px;font-weight:800">' + escapeHtml(food.name) + '</div>' +
-            (food.brand ? '<div class="muted2" style="font-size:11px;margin-top:4px">' + escapeHtml(food.brand) + '</div>' : '') +
+          '<div style="flex:1;min-width:0;overflow:hidden">' +
+            '<div style="font-size:14px;font-weight:800;word-break:break-word">' + escapeHtmlSearch(food.name) + '</div>' +
+            (food.brand ? '<div class="muted2" style="font-size:11px;margin-top:4px;word-break:break-word">' + escapeHtmlSearch(food.brand) + '</div>' : '') +
             '<div class="pill mono" style="font-size:10px;margin-top:6px">' + (food.kcal || 0) + ' kcal / 100g</div>' +
           '</div>' +
         '</div>' +
@@ -310,9 +348,9 @@ function openAddModal(food) {
         '</div>' +
         '<div style="margin-top:16px">' +
           '<div class="eyebrow">Comida</div>' +
-          '<div style="display:flex;gap:6px;margin-top:6px">' +
+          '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">' +
             ['desayuno','almuerzo','merienda','cena'].map((m) =>
-              '<button class="meal-btn chip-btn" data-meal="' + m + '" style="flex:1">' + m.slice(0,3).toUpperCase() + '</button>'
+              '<button class="meal-btn chip-btn" data-meal="' + m + '" style="flex:1;min-width:70px">' + m.slice(0,3).toUpperCase() + '</button>'
             ).join('') +
           '</div>' +
         '</div>' +

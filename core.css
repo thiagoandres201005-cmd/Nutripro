@@ -136,3 +136,22 @@ nav.bottom .inner { background: rgba(21, 21, 24, 0.94); backdrop-filter: blur(20
 
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Fix overflow global */
+* { max-width: 100%; }
+html, body { overflow-x: hidden; }
+.container { overflow-x: hidden; max-width: 100%; }
+.card { overflow-x: hidden; max-width: 100%; word-break: break-word; }
+.card-pad { overflow-x: hidden; }
+h1, h2, h3, h4, h5, h6, p, span, div { word-break: break-word; }
+header.top .row { overflow: hidden; }
+header.top .row .logo { min-width: 0; flex-shrink: 1; }
+header.top .row .logo .name,
+header.top .row .logo .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top-actions { flex-shrink: 0; }
+.grid { max-width: 100%; overflow-x: hidden; }
+.grid > * { min-width: 0; }
+button { max-width: 100%; box-sizing: border-box; word-break: break-word; }
+input, select { max-width: 100%; box-sizing: border-box; }
+.pill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-btn { max-width: none; }
