@@ -1,0 +1,36 @@
+{
+  "sports": [
+    { "id": "calistenia", "name": "Calistenia", "emoji": "🤸", "kcalExtra": 200, "macros": { "p": 30, "c": 40, "f": 30 }, "goalSugerido": "ganar", "desc": "Entrenamiento con peso corporal" },
+    { "id": "powerlifting", "name": "Powerlifting", "emoji": "🏋️", "kcalExtra": 300, "macros": { "p": 30, "c": 45, "f": 25 }, "goalSugerido": "ganar", "desc": "Sentadilla, banco y peso muerto" },
+    { "id": "futbol", "name": "Fútbol", "emoji": "⚽", "kcalExtra": 400, "macros": { "p": 25, "c": 50, "f": 25 }, "goalSugerido": "mantener", "desc": "Deporte de equipo con alta intensidad" },
+    { "id": "tenis", "name": "Tenis", "emoji": "🎾", "kcalExtra": 250, "macros": { "p": 25, "c": 50, "f": 25 }, "goalSugerido": "mantener", "desc": "Deporte de raqueta con sprints" },
+    { "id": "voley", "name": "Vóley", "emoji": "🏐", "kcalExtra": 300, "macros": { "p": 25, "c": 50, "f": 25 }, "goalSugerido": "mantener", "desc": "Deporte de equipo con saltos" },
+    { "id": "hockey", "name": "Hockey", "emoji": "🏑", "kcalExtra": 350, "macros": { "p": 25, "c": 50, "f": 25 }, "goalSugerido": "mantener", "desc": "Deporte de equipo con resistencia" },
+    { "id": "crossfit", "name": "CrossFit", "emoji": "💪", "kcalExtra": 300, "macros": { "p": 28, "c": 42, "f": 30 }, "goalSugerido": "ganar", "desc": "Entrenamiento funcional de alta intensidad" },
+    { "id": "running", "name": "Running", "emoji": "🏃", "kcalExtra": 350, "macros": { "p": 25, "c": 55, "f": 20 }, "goalSugerido": "mantener", "desc": "Carrera de distancias" },
+    { "id": "natacion", "name": "Natación", "emoji": "🏊", "kcalExtra": 350, "macros": { "p": 25, "c": 50, "f": 25 }, "goalSugerido": "mantener", "desc": "Deporte acuático completo" },
+    { "id": "ciclismo", "name": "Ciclismo", "emoji": "🚴", "kcalExtra": 400, "macros": { "p": 25, "c": 55, "f": 20 }, "goalSugerido": "mantener", "desc": "Resistencia sobre ruedas" },
+    { "id": "gimnasio", "name": "Gimnasio", "emoji": "🏋️‍♂️", "kcalExtra": 250, "macros": { "p": 30, "c": 40, "f": 30 }, "goalSugerido": "ganar", "desc": "Entrenamiento con pesas tradicional" },
+    { "id": "basquet", "name": "Básquet", "emoji": "🏀", "kcalExtra": 350, "macros": { "p": 25, "c": 50, "f": 25 }, "goalSugerido": "mantener", "desc": "Deporte de equipo con saltos" },
+    { "id": "bjj", "name": "BJJ / MMA", "emoji": "🥋", "kcalExtra": 300, "macros": { "p": 30, "c": 40, "f": 30 }, "goalSugerido": "mantener", "desc": "Artes marciales y lucha" },
+    { "id": "yoga", "name": "Yoga / Pilates", "emoji": "🧘", "kcalExtra": 100, "macros": { "p": 25, "c": 50, "f": 25 }, "goalSugerido": "mantener", "desc": "Flexibilidad y equilibrio" },
+    { "id": "ninguno", "name": "Ninguno", "emoji": "🎯", "kcalExtra": 0, "macros": { "p": 25, "c": 50, "f": 25 }, "goalSugerido": "mantener", "desc": "Sin deporte específico" }
+  ],
+  "activities": [
+    { "id": "sedentaria", "name": "Sedentaria", "factor": 1.2, "desc": "Trabajo de oficina, sin ejercicio" },
+    { "id": "ligera", "name": "Ligera", "factor": 1.375, "desc": "Ejercicio 1-3 días por semana" },
+    { "id": "moderada", "name": "Moderada", "factor": 1.55, "desc": "Ejercicio 3-5 días por semana" },
+    { "id": "alta", "name": "Alta", "factor": 1.725, "desc": "Ejercicio 6-7 días por semana" },
+    { "id": "atleta", "name": "Atleta", "factor": 1.9, "desc": "Entrenamiento 2x día o profesional" }
+  ],
+  "goals": [
+    { "id": "perder", "name": "Perder grasa", "emoji": "📉", "adj": -0.15, "desc": "Déficit calórico controlado" },
+    { "id": "mantener", "name": "Mantener", "emoji": "⚖️", "adj": 0, "desc": "Peso y composición estables" },
+    { "id": "ganar", "name": "Ganar músculo", "emoji": "📈", "adj": 0.15, "desc": "Superávit para ganar masa" }
+  ],
+  "speeds": [
+    { "id": "lento", "name": "Lento", "emoji": "🐢", "value": 0.25, "desc": "Sostenible a largo plazo" },
+    { "id": "moderado", "name": "Moderado", "emoji": "⚡", "value": 0.5, "desc": "Recomendado por la OMS", "recommended": true },
+    { "id": "rapido", "name": "Rápido", "emoji": "🚀", "value": 0.75, "desc": "Requiere disciplina estricta" }
+  ]
+}
