@@ -537,3 +537,25 @@ h1, h2, h3, h4, h5, h6, p, span, div { word-break: break-word; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============ FIX SCROLL PRINCIPAL ============ */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+#app-root {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.app {
+  min-height: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+.container {
+  flex: 1;
+  overflow-y: visible;
+  padding-bottom: 100px; /* Espacio para el menú inferior */
+}

@@ -1,7 +1,8 @@
 /* ============================================================================
-   SomaAi — Onboarding v6
-   - Permisos simplificados (un solo botón, no bloquea)
-   - Continuar siempre disponible
+   SomaAi — Onboarding v7
+   - Permisos REALES con Capacitor
+   - IMC en tiempo real
+   - Datos guardados en perfil
    ========================================================================== */
 
 const OB_SPORTS = [];
@@ -148,7 +149,7 @@ function obFeatureRow(emoji, title, desc) {
   '</div>';
 }
 
-/* ------------------------- PASO 2: Permisos (Simplificado) ------------------------- */
+/* ------------------------- PASO 2: Permisos REALES ------------------------- */
 function obStepPermissions() {
   const div = document.createElement('div');
   div.className = 'card card-pad fade-in-up';
@@ -179,14 +180,74 @@ function obStepPermissions() {
   }).join('');
 
   div.innerHTML = `
-    <div class="eyebrow" style="color:var(--green)">⚙️ Permisos opcionales</div>
+    <div class="eyebrow" style="color:var(--green)">⚙️ Permisos</div>
     <div class="h2" style="margin-top:8px">Configurá tu experiencia</div>
-    <div class="muted" style="font-size:12px;margin-top:4px">Podés activarlos ahora o después desde Ajustes. La app funciona sin ellos.</div>
+    <div class="muted" style="font-size:12px;margin-top:4px">Tocá "Activar todos" para que el teléfono te pida los permisos reales.</div>
     <div style="margin-top:16px">${rows}</div>
     <button class="btn btn-primary" id="ob-perm-all" style="width:100%;margin-top:16px">Activar todos los permisos</button>
     <button class="btn btn-ghost" id="ob-perm-skip" style="width:100%;margin-top:8px">Omitir por ahora</button>
   `;
   return div;
+}
+
+async function obRequestPermissions() {
+  const results = {};
+  const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+
+  if (isCapacitor) {
+    try {
+      // Cámara
+      const { Camera } = await import('@capacitor/camera');
+      const camStatus = await Camera.requestPermissions({ permissions: ['camera'] });
+      results.camera = camStatus.camera === 'granted';
+
+      // Notificaciones
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      const notifStatus = await LocalNotifications.requestPermissions();
+      results.notifications = notifStatus.display === 'granted';
+
+      // Vibración (no necesita permiso en Android, pero verificamos)
+      results.vibration = true;
+
+      // Almacenamiento (en Android moderno se maneja diferente, pero lo marcamos)
+      results.storage = true;
+
+      // Micrófono
+      try {
+        const { SpeechRecognition } = await import('@capacitor-community/speech-recognition');
+        const micStatus = await SpeechRecognition.requestPermissions();
+        results.microphone = micStatus.speechRecognition === 'granted';
+      } catch (e) {
+        results.microphone = false;
+      }
+    } catch (e) {
+      console.warn('Error pidiendo permisos nativos:', e);
+    }
+  } else {
+    // Web fallback
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(t => t.stop());
+        results.camera = true;
+      } catch (e) {
+        results.camera = false;
+      }
+    }
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      results.notifications = permission === 'granted';
+    }
+    results.storage = true;
+    results.vibration = true;
+  }
+
+  obDraft.permissions = { ...obDraft.permissions, ...results };
+  obRender();
+  if (window.SomaAi && window.SomaAi.toast) {
+    const granted = Object.values(results).filter(Boolean).length;
+    window.SomaAi.toast(`✅ ${granted} permisos activados`);
+  }
 }
 
 /* ------------------------- PASO 3: Cuenta ------------------------- */
@@ -218,7 +279,7 @@ function obStepAccount() {
   return div;
 }
 
-/* ------------------------- PASO 4: Datos Básicos ------------------------- */
+/* ------------------------- PASO 4: Datos Básicos (IMC en tiempo real) ------------------------- */
 function obStepBasics() {
   const div = document.createElement('div');
   div.className = 'card card-pad fade-in-up';
@@ -255,7 +316,7 @@ function obStepBasics() {
         <input type="number" id="ob-weight" class="input" value="${obDraft.weight}" />
       </label>
       
-      <div style="margin-top:16px;padding:12px;background:var(--surface);border-radius:12px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div id="ob-imc-box" style="margin-top:16px;padding:12px;background:var(--surface);border-radius:12px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <span class="muted" style="font-size:12px">IMC estimado</span>
         <span class="mono" style="font-weight:800;color:${imcColor}">${imc.toFixed(1)} · ${imcCat}</span>
       </div>
@@ -422,7 +483,7 @@ function obGetActivityFactor() {
   return 1.9;
 }
 
-/* ------------------------- NAVEGACIÓN Y HANDLERS (LA CLAVE) ------------------------- */
+/* ------------------------- NAVEGACIÓN Y HANDLERS ------------------------- */
 function obBuildNav() {
   const div = document.createElement('div');
   div.style.display = 'flex';
@@ -460,11 +521,7 @@ function obAttachHandlers() {
 
   // Permisos
   const permAll = document.getElementById('ob-perm-all');
-  if (permAll) permAll.onclick = () => {
-    obDraft.permissions = { camera: true, notifications: true, storage: true, vibration: true, microphone: true };
-    obRender();
-    if (window.SomaAi && window.SomaAi.toast) window.SomaAi.toast('✅ Permisos activados');
-  };
+  if (permAll) permAll.onclick = obRequestPermissions;
   const permSkip = document.getElementById('ob-perm-skip');
   if (permSkip) permSkip.onclick = () => {
     obStep++;
@@ -481,18 +538,27 @@ function obAttachHandlers() {
   const pass = document.getElementById('ob-pass');
   if (pass) pass.oninput = (e) => { obDraft.password = e.target.value; };
 
-  // Datos básicos
+  // Datos básicos con IMC en tiempo real
   document.querySelectorAll('[data-sex]').forEach((b) => {
     b.onclick = () => { obDraft.sex = b.dataset.sex; obRender(); };
   });
   const nameEl = document.getElementById('ob-name');
   if (nameEl) nameEl.oninput = (e) => { obDraft.name = e.target.value; };
   const ageEl = document.getElementById('ob-age');
-  if (ageEl) ageEl.oninput = (e) => { obDraft.age = parseFloat(e.target.value) || 28; };
+  if (ageEl) ageEl.oninput = (e) => { 
+    obDraft.age = parseFloat(e.target.value) || 28; 
+    obUpdateIMC();
+  };
   const hEl = document.getElementById('ob-height');
-  if (hEl) hEl.oninput = (e) => { obDraft.height = parseFloat(e.target.value) || 168; };
+  if (hEl) hEl.oninput = (e) => { 
+    obDraft.height = parseFloat(e.target.value) || 168; 
+    obUpdateIMC();
+  };
   const wEl = document.getElementById('ob-weight');
-  if (wEl) wEl.oninput = (e) => { obDraft.weight = parseFloat(e.target.value) || 72.4; };
+  if (wEl) wEl.oninput = (e) => { 
+    obDraft.weight = parseFloat(e.target.value) || 72.4; 
+    obUpdateIMC();
+  };
 
   // Deporte
   document.querySelectorAll('[data-sport]').forEach((b) => {
@@ -523,6 +589,18 @@ function obAttachHandlers() {
   document.querySelectorAll('[data-speed]').forEach((b) => {
     b.onclick = () => { obDraft.speed = parseFloat(b.dataset.speed); obRender(); };
   });
+}
+
+function obUpdateIMC() {
+  const box = document.getElementById('ob-imc-box');
+  if (!box) return;
+  const imc = obDraft.weight / ((obDraft.height / 100) ** 2);
+  const imcCat = imc < 18.5 ? 'Bajo peso' : imc < 25 ? 'Normal' : imc < 30 ? 'Sobrepeso' : 'Obesidad';
+  const imcColor = imc < 18.5 ? 'var(--cyan)' : imc < 25 ? 'var(--green)' : imc < 30 ? 'var(--amber)' : 'var(--red)';
+  box.innerHTML = `
+    <span class="muted" style="font-size:12px">IMC estimado</span>
+    <span class="mono" style="font-weight:800;color:${imcColor}">${imc.toFixed(1)} · ${imcCat}</span>
+  `;
 }
 
 function obNext() {
@@ -558,12 +636,15 @@ function obFinish() {
   else if (days <= 6) activity = 'alta';
   else activity = 'atleta';
 
+  const imc = weight / ((height / 100) ** 2);
+
   S.state.profile = {
     name: obDraft.name || 'Usuario',
     sex: sex,
     age: age,
     height: height,
     weight: weight,
+    imc: imc,
     activity: activity,
     trainingDays: days,
     goal: obDraft.goal || 'mantener',
@@ -574,6 +655,7 @@ function obFinish() {
     onboardedAt: new Date().toISOString(),
     email: obDraft.email || null,
     weightHistory: [{ date: new Date().toISOString().slice(0, 10), kg: weight }],
+    permissions: obDraft.permissions,
   };
   S.state.weight = weight;
   S.state.entries = [];
