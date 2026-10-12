@@ -559,3 +559,32 @@ html, body {
   overflow-y: visible;
   padding-bottom: 100px; /* Espacio para el menú inferior */
 }
+
+/* ============ SKELETON LOADER ============ */
+.skel {
+  background: linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.1) 50%, rgba(255,255,255,.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============ TRANSICIONES ============ */
+.fade-in { animation: fadeIn 0.3s var(--ease-out); }
+.fade-in-up { animation: fadeInUp 0.4s var(--ease-out) backwards; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ BOTONES NAV ============ */
+.nav-btn:active { transform: scale(0.95); }
+.btn:active, .icon-btn:active { transform: scale(0.96); }
+
+/* ============ SCROLL ============ */
+main::-webkit-scrollbar { width: 0; }
+main { scrollbar-width: none; }
