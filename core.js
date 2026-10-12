@@ -1,14 +1,9 @@
 /* ============================================================================
-   SomaAi v1.4 — Núcleo con UX/UI Profesional
-   - Transiciones suaves entre pestañas
-   - Feedback táctil (vibración + scale)
-   - Skeletons de carga
-   - Manejo de errores
-   - Modales de confirmación personalizados
+   SomaAi v1.5 — Núcleo con pestaña Cámara
    ========================================================================== */
 
 const state = {
-  version: '1.4.0',
+  version: '1.5.0',
   platform: 'web',
   date: new Date().toISOString().slice(0, 10),
   water: 0,
@@ -37,10 +32,10 @@ const state = {
   dbError: false,
 };
 
-/* ------------------------- Persistencia Robusta ------------------------- */
+/* ------------------------- Persistencia ------------------------- */
 function saveState() {
   try {
-    const toSave = {
+    localStorage.setItem('somaai_state', JSON.stringify({
       version: state.version,
       date: state.date,
       water: state.water,
@@ -48,11 +43,8 @@ function saveState() {
       entries: state.entries,
       profile: state.profile,
       customFoods: state.customFoods,
-    };
-    localStorage.setItem('somaai_state', JSON.stringify(toSave));
-  } catch (e) {
-    console.error('[SomaAi] Error al guardar estado:', e);
-  }
+    }));
+  } catch (e) {}
 }
 
 function loadState() {
@@ -65,22 +57,18 @@ function loadState() {
       if (parsed.weight !== undefined) state.weight = parsed.weight;
       if (parsed.entries) state.entries = parsed.entries;
       if (parsed.customFoods) state.customFoods = parsed.customFoods;
-      
       if (parsed.profile) {
         state.profile = { ...state.profile, ...parsed.profile };
         state.profile.weight = Number(state.profile.weight) || 72.4;
         state.profile.height = Number(state.profile.height) || 168;
         state.profile.age = Number(state.profile.age) || 28;
         state.profile.trainingDays = Number(state.profile.trainingDays) || 3;
-        
         if (!state.profile.imc || isNaN(state.profile.imc)) {
           state.profile.imc = state.profile.weight / ((state.profile.height / 100) ** 2);
         }
       }
-      
       if (state.profile.weight) state.weight = state.profile.weight;
     }
-    
     const today = new Date().toISOString().slice(0, 10);
     if (state.date !== today) {
       state.entries = [];
@@ -88,12 +76,10 @@ function loadState() {
       state.date = today;
       saveState();
     }
-  } catch (e) {
-    console.error('[SomaAi] Error al cargar estado:', e);
-  }
+  } catch (e) {}
 }
 
-/* ------------------------- Carga de Bases de Datos ------------------------- */
+/* ------------------------- Bases de datos ------------------------- */
 const DATABASES = [
   './data/database.json',
   './data/db-marcas-lacteos.json',
@@ -107,37 +93,25 @@ const DATABASES = [
 ];
 
 async function loadAllDatabases() {
-  if (state.foodsLoaded) return; // Ya cargadas
+  if (state.foodsLoaded) return;
   state.loadingDB = true;
-  state.dbError = false;
   render();
-  
   const allFoods = [];
-  
   for (const db of DATABASES) {
     try {
       const res = await fetch(db);
       if (!res.ok) continue;
       const data = await res.json();
-      if (data.foods && Array.isArray(data.foods)) {
-        allFoods.push(...data.foods);
-      }
-    } catch (e) {
-      console.warn('[SomaAi] No se pudo cargar:', db);
-    }
+      if (data.foods && Array.isArray(data.foods)) allFoods.push(...data.foods);
+    } catch (e) {}
   }
-  
   if (allFoods.length === 0) {
     state.dbError = true;
     state.loadingDB = false;
     render();
     return;
   }
-  
-  if (state.customFoods && state.customFoods.length) {
-    allFoods.push(...state.customFoods);
-  }
-  
+  if (state.customFoods && state.customFoods.length) allFoods.push(...state.customFoods);
   state.foods = allFoods;
   state.foodsCount = allFoods.length;
   state.foodsLoaded = true;
@@ -151,7 +125,7 @@ function retryLoadDB() {
   loadAllDatabases();
 }
 
-/* ------------------------- Cálculos Exactos ------------------------- */
+/* ------------------------- Cálculos ------------------------- */
 function calcTargets(profile) {
   const w = Number(profile.weight) || 72.4;
   const h = Number(profile.height) || 168;
@@ -159,21 +133,16 @@ function calcTargets(profile) {
   const sex = profile.sex || 'f';
   const activity = profile.activity || 'moderada';
   const goal = profile.goal || 'mantener';
-
   const base = 10 * w + 6.25 * h - 5 * a;
   const tmb = Math.round(sex === 'm' ? base + 5 : base - 161);
-
   const act = { sedentaria: 1.2, ligera: 1.375, moderada: 1.55, alta: 1.725, atleta: 1.9 };
   const factor = act[activity] || 1.55;
   const tdee = tmb * factor;
-
   const adj = { perder: -0.15, mantener: 0, ganar: 0.15 };
   const targetKcal = Math.round(tdee * (1 + (adj[goal] || 0)));
-
   const ratio = goal === 'ganar' ? { p: 0.30, c: 0.45, f: 0.25 }
               : goal === 'perder' ? { p: 0.35, c: 0.35, f: 0.30 }
               : { p: 0.25, c: 0.50, f: 0.25 };
-
   return {
     kcal: targetKcal,
     p: Math.round(targetKcal * ratio.p / 4),
@@ -186,7 +155,7 @@ function calcTargets(profile) {
 }
 
 function calcTotals(entries) {
-  const t = { kcal: 0, p: 0, c: 0, f: 0, fib: 0, sug: 0, na: 0 };
+  const t = { kcal: 0, p: 0, c: 0, f: 0 };
   entries.forEach((e) => {
     const food = state.foods.find((f) => f.id === e.foodId) || e.food;
     if (!food) return;
@@ -196,12 +165,7 @@ function calcTotals(entries) {
     t.c += (Number(food.c) || 0) * k;
     t.f += (Number(food.f) || 0) * k;
   });
-  return {
-    kcal: Math.round(t.kcal),
-    p: Math.round(t.p),
-    c: Math.round(t.c),
-    f: Math.round(t.f),
-  };
+  return { kcal: Math.round(t.kcal), p: Math.round(t.p), c: Math.round(t.c), f: Math.round(t.f) };
 }
 
 /* ------------------------- DOM Helpers ------------------------- */
@@ -211,9 +175,8 @@ function el(tag, props, children) {
     Object.keys(props).forEach((k) => {
       if (k === 'style' && typeof props[k] === 'object') Object.assign(node.style, props[k]);
       else if (k === 'class') node.className = props[k];
-      else if (k.startsWith('on') && typeof props[k] === 'function') {
-        node.addEventListener(k.slice(2).toLowerCase(), props[k]);
-      } else if (k === 'html') node.innerHTML = props[k];
+      else if (k.startsWith('on') && typeof props[k] === 'function') node.addEventListener(k.slice(2).toLowerCase(), props[k]);
+      else if (k === 'html') node.innerHTML = props[k];
       else if (k === 'text') node.textContent = props[k];
       else node.setAttribute(k, props[k]);
     });
@@ -234,11 +197,8 @@ function ring(value, goal, label, color1, color2) {
   div.innerHTML =
     '<svg viewBox="0 0 100 100">' +
       '<circle cx="50" cy="50" r="' + R + '" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>' +
-      '<circle cx="50" cy="50" r="' + R + '" fill="none" stroke="url(#grad' + label + ')" stroke-width="6" ' +
-        'stroke-linecap="round" stroke-dasharray="' + CIRC + '" stroke-dashoffset="' + off + '" ' +
-        'transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1s ease"/>' +
-      '<defs><linearGradient id="grad' + label + '"><stop offset="0%" stop-color="' + color1 + '"/>' +
-        '<stop offset="100%" stop-color="' + color2 + '"/></linearGradient></defs>' +
+      '<circle cx="50" cy="50" r="' + R + '" fill="none" stroke="url(#grad' + label + ')" stroke-width="6" stroke-linecap="round" stroke-dasharray="' + CIRC + '" stroke-dashoffset="' + off + '" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1s ease"/>' +
+      '<defs><linearGradient id="grad' + label + '"><stop offset="0%" stop-color="' + color1 + '"/><stop offset="100%" stop-color="' + color2 + '"/></linearGradient></defs>' +
     '</svg>' +
     '<div style="position:absolute;inset:0;display:grid;place-items:center">' +
       '<div style="text-align:center">' +
@@ -257,24 +217,17 @@ function miniStat(label, value, color) {
 }
 
 function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  })[c]);
+  return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
-/* ------------------------- Skeleton Loader ------------------------- */
 function renderSkeleton() {
   return '<div class="card card-pad" style="margin-bottom:16px">' +
     '<div class="skel" style="height:16px;width:40%;margin-bottom:12px"></div>' +
     '<div class="skel" style="height:40px;width:80%;margin-bottom:12px"></div>' +
     '<div class="skel" style="height:12px;width:60%"></div>' +
   '</div>' +
-  '<div class="card card-pad" style="margin-bottom:16px">' +
-    '<div class="skel" style="height:80px;width:100%"></div>' +
-  '</div>' +
-  '<div class="card card-pad">' +
-    '<div class="skel" style="height:60px;width:100%"></div>' +
-  '</div>';
+  '<div class="card card-pad" style="margin-bottom:16px"><div class="skel" style="height:80px;width:100%"></div></div>' +
+  '<div class="card card-pad"><div class="skel" style="height:60px;width:100%"></div></div>';
 }
 
 /* ------------------------- Vista HOY ------------------------- */
@@ -291,9 +244,7 @@ function renderHoy() {
         '<div class="eyebrow">Objetivo diario</div>' +
         '<div class="h1" style="margin-top:4px">' + totals.kcal + ' <span class="muted" style="font-size:16px;font-weight:600">/ ' + targets.kcal + ' kcal</span></div>' +
         '<div class="muted" style="font-size:12px;margin-top:6px">' +
-          (targets.kcal - totals.kcal > 0
-            ? 'Te quedan <strong style="color:var(--green)">' + (targets.kcal - totals.kcal) + '</strong> kcal'
-            : '<strong style="color:var(--pink)">Superaste ' + Math.abs(targets.kcal - totals.kcal) + ' kcal</strong>') +
+          (targets.kcal - totals.kcal > 0 ? 'Te quedan <strong style="color:var(--green)">' + (targets.kcal - totals.kcal) + '</strong> kcal' : '<strong style="color:var(--pink)">Superaste ' + Math.abs(targets.kcal - totals.kcal) + ' kcal</strong>') +
         '</div>' +
       '</div>' +
       '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">' +
@@ -301,9 +252,7 @@ function renderHoy() {
         '<span class="pill green">✓ ' + escapeHtml(state.profile.name || 'Usuario') + '</span>' +
       '</div>' +
     '</div>' +
-    '<div class="bar" style="margin-top:20px;height:10px">' +
-      '<i style="width:' + Math.min(100, totals.kcal / targets.kcal * 100) + '%;background:linear-gradient(90deg,var(--green),var(--cyan),var(--pink))"></i>' +
-    '</div>';
+    '<div class="bar" style="margin-top:20px;height:10px"><i style="width:' + Math.min(100, totals.kcal / targets.kcal * 100) + '%;background:linear-gradient(90deg,var(--green),var(--cyan),var(--pink))"></i></div>';
   wrap.appendChild(card1);
 
   const card2 = el('div', { class: 'card card-pad fade-in-up' });
@@ -313,17 +262,14 @@ function renderHoy() {
   rings.appendChild(ring(totals.c, targets.c, 'carb', '#06b6d4', '#8b5cf6'));
   rings.appendChild(ring(totals.f, targets.f, 'grasa', '#ec4899', '#f59e0b'));
   card2.appendChild(rings);
-
   const w = Number(state.profile.weight) || 72.4;
-  const pPerKg = (totals.p / w).toFixed(2);
   const stats = el('div', { class: 'grid g-3', style: { marginTop: '16px', gap: '8px' } });
-  stats.appendChild(miniStat('P / kg', pPerKg, 'var(--green)'));
+  stats.appendChild(miniStat('P / kg', (totals.p / w).toFixed(2), 'var(--green)'));
   stats.appendChild(miniStat('Proteína obj.', targets.p + 'g', 'var(--cyan)'));
   stats.appendChild(miniStat('Adherencia', Math.round(Math.max(0, 100 - Math.abs(totals.kcal - targets.kcal) / targets.kcal * 100)) + '%', 'var(--amber)'));
   card2.appendChild(stats);
   wrap.appendChild(card2);
 
-  // Distribución por comida
   if (state.entries.length > 0) {
     const meals = ['desayuno', 'almuerzo', 'merienda', 'cena', 'snack'];
     const mealEmojis = { desayuno: '🌅', almuerzo: '☀️', merienda: '🍵', cena: '🌙', snack: '🍿' };
@@ -353,10 +299,10 @@ function renderHoy() {
           '<span style="font-size:13px;font-weight:700">' + mealEmojis[meal] + ' ' + meal.charAt(0).toUpperCase() + meal.slice(1) + '</span>' +
           '<span class="mono" style="font-size:12px;font-weight:700;color:var(--green)">' + Math.round(mealKcal) + ' kcal</span>' +
         '</div>';
-      items.forEach((e, idx) => {
+      items.forEach((e) => {
         const food = state.foods.find(f => f.id === e.foodId) || e.food;
         if (!food) return;
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)" data-entry-idx="' + state.entries.indexOf(e) + '">' +
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">' +
           '<div style="min-width:0;flex:1">' +
             '<div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(food.name) + '</div>' +
             '<div class="muted2" style="font-size:10px">' + e.grams + 'g</div>' +
@@ -376,8 +322,7 @@ function renderHoy() {
     setTimeout(() => {
       document.querySelectorAll('[data-del-idx]').forEach(btn => {
         btn.onclick = () => {
-          const idx = parseInt(btn.dataset.delIdx);
-          state.entries.splice(idx, 1);
+          state.entries.splice(parseInt(btn.dataset.delIdx), 1);
           saveState();
           render();
           toast('🗑️ Alimento eliminado');
@@ -395,23 +340,13 @@ function renderHoy() {
     }, 50);
   }
 
-  // Hidratación y Peso
   const row = el('div', { class: 'grid g-2 fade-in-up', style: { gap: '16px' } });
-
   const waterCard = el('div', { class: 'card card-pad' });
   waterCard.innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center">' +
-      '<div class="eyebrow">💧 Hidratación</div>' +
-      '<span class="pill cyan" style="font-size:10px">' + waterPct + '%</span>' +
-    '</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center"><div class="eyebrow">💧 Hidratación</div><span class="pill cyan" style="font-size:10px">' + waterPct + '%</span></div>' +
     '<div style="margin-top:10px;position:relative;height:70px;border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--border)">' +
       '<div style="position:absolute;left:0;right:0;bottom:0;height:' + waterPct + '%;background:linear-gradient(180deg,var(--cyan)cc,var(--cyan)44);transition:height .6s var(--ease)"></div>' +
-      '<div style="position:absolute;inset:0;display:grid;place-items:center">' +
-        '<div style="text-align:center">' +
-          '<div class="mono" style="font-size:18px;font-weight:800">' + state.water + ' ml</div>' +
-          '<div class="muted2" style="font-size:10px">Meta: ' + targets.water + ' ml</div>' +
-        '</div>' +
-      '</div>' +
+      '<div style="position:absolute;inset:0;display:grid;place-items:center"><div style="text-align:center"><div class="mono" style="font-size:18px;font-weight:800">' + state.water + ' ml</div><div class="muted2" style="font-size:10px">Meta: ' + targets.water + ' ml</div></div></div>' +
     '</div>' +
     '<div style="display:flex;gap:6px;margin-top:10px">' +
       [250, 500, 750].map((ml) => '<button class="btn btn-ghost btn-sm" data-water="' + ml + '" style="flex:1">+' + ml + '</button>').join('') +
@@ -421,56 +356,21 @@ function renderHoy() {
 
   const weightCard = el('div', { class: 'card card-pad' });
   weightCard.innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center">' +
-      '<div class="eyebrow">⚖️ Peso</div>' +
-      '<span class="pill green" style="font-size:10px">IMC ' + (state.profile.imc || 0).toFixed(1) + '</span>' +
-    '</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center"><div class="eyebrow">⚖️ Peso</div><span class="pill green" style="font-size:10px">IMC ' + (state.profile.imc || 0).toFixed(1) + '</span></div>' +
     '<div style="margin-top:10px;text-align:center;padding:16px 0">' +
       '<div class="mono" style="font-size:32px;font-weight:800">' + (Number(state.weight) || 72.4).toFixed(1) + '<span class="muted" style="font-size:14px;font-weight:600"> kg</span></div>' +
-      '<div class="muted2" style="font-size:11px;margin-top:4px">' +
-        ((state.profile.imc || 0) < 18.5 ? 'Bajo peso' : (state.profile.imc || 0) < 25 ? 'Normal' : (state.profile.imc || 0) < 30 ? 'Sobrepeso' : 'Obesidad') +
-      '</div>' +
+      '<div class="muted2" style="font-size:11px;margin-top:4px">' + ((state.profile.imc || 0) < 18.5 ? 'Bajo peso' : (state.profile.imc || 0) < 25 ? 'Normal' : (state.profile.imc || 0) < 30 ? 'Sobrepeso' : 'Obesidad') + '</div>' +
     '</div>' +
     '<button class="btn btn-ghost btn-sm" id="weight-edit" style="width:100%">✎ Actualizar peso</button>';
   row.appendChild(weightCard);
-
   wrap.appendChild(row);
-
-  // Info base de datos
-  const infoCard = el('div', { class: 'card card-pad fade-in-up', style: { background: 'linear-gradient(135deg,rgba(0,255,136,.06),rgba(6,182,212,.04))' } });
-  if (!state.foodsLoaded) {
-    infoCard.innerHTML =
-      '<div style="display:flex;justify-content:space-between;align-items:center">' +
-        '<div class="eyebrow" style="color:var(--green)">📚 Base de datos</div>' +
-        '<span class="pill" style="font-size:10px">Cargando...</span>' +
-      '</div>' +
-      '<div class="skel" style="height:12px;width:60%;margin-top:12px"></div>';
-  } else {
-    infoCard.innerHTML =
-      '<div style="display:flex;justify-content:space-between;align-items:center">' +
-        '<div class="eyebrow" style="color:var(--green)">📚 Base de datos</div>' +
-        '<span class="pill green" style="font-size:10px">' + state.foodsCount + ' alimentos</span>' +
-      '</div>' +
-      '<div class="muted" style="font-size:11px;margin-top:8px">Buscador disponible en la pestaña "Buscar"</div>';
-  }
-  wrap.appendChild(infoCard);
 
   setTimeout(() => {
     document.querySelectorAll('[data-water]').forEach((b) => {
-      b.onclick = () => {
-        haptic();
-        state.water += parseInt(b.dataset.water);
-        saveState();
-        render();
-      };
+      b.onclick = () => { haptic(); state.water += parseInt(b.dataset.water); saveState(); render(); };
     });
     const resetWater = document.querySelector('[data-water-reset]');
-    if (resetWater) resetWater.onclick = () => {
-      haptic();
-      state.water = 0;
-      saveState();
-      render();
-    };
+    if (resetWater) resetWater.onclick = () => { haptic(); state.water = 0; saveState(); render(); };
     const weightEdit = document.getElementById('weight-edit');
     if (weightEdit) weightEdit.onclick = () => {
       haptic();
@@ -495,7 +395,6 @@ function renderHoy() {
 function showConfirm(title, message, onConfirm) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:1000;display:grid;place-items:center;padding:24px;opacity:0;transition:opacity .2s';
-  
   const modal = document.createElement('div');
   modal.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:340px;width:100%;transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1)';
   modal.innerHTML =
@@ -505,46 +404,25 @@ function showConfirm(title, message, onConfirm) {
       '<button class="btn btn-ghost" id="modal-cancel" style="flex:1">Cancelar</button>' +
       '<button class="btn btn-primary" id="modal-confirm" style="flex:1">Confirmar</button>' +
     '</div>';
-  
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
-  
-  setTimeout(() => {
-    overlay.style.opacity = '1';
-    modal.style.transform = 'scale(1)';
-  }, 10);
-  
-  const close = () => {
-    overlay.style.opacity = '0';
-    modal.style.transform = 'scale(.9)';
-    setTimeout(() => overlay.remove(), 200);
-  };
-  
+  setTimeout(() => { overlay.style.opacity = '1'; modal.style.transform = 'scale(1)'; }, 10);
+  const close = () => { overlay.style.opacity = '0'; modal.style.transform = 'scale(.9)'; setTimeout(() => overlay.remove(), 200); };
   modal.querySelector('#modal-cancel').onclick = close;
-  modal.querySelector('#modal-confirm').onclick = () => {
-    close();
-    onConfirm();
-  };
+  modal.querySelector('#modal-confirm').onclick = () => { close(); onConfirm(); };
   overlay.onclick = (e) => { if (e.target === overlay) close(); };
 }
 
-/* ------------------------- Toast / Haptic ------------------------- */
 function toast(message) {
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(20,20,25,.95);color:#fff;padding:12px 20px;border-radius:999px;font-size:13px;font-weight:600;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);z-index:1000;opacity:0;transition:all .3s';
   t.textContent = message;
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; }, 10);
-  setTimeout(() => {
-    t.style.opacity = '0';
-    t.style.transform = 'translateX(-50%) translateY(20px)';
-    setTimeout(() => t.remove(), 300);
-  }, 2500);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(20px)'; setTimeout(() => t.remove(), 300); }, 2500);
 }
 
-function haptic() {
-  if (navigator.vibrate) navigator.vibrate(10);
-}
+function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
 
 /* ------------------------- Render General ------------------------- */
 function render() {
@@ -563,35 +441,20 @@ function render() {
   const header = el('header', { class: 'top' });
   header.innerHTML =
     '<div class="grad-line"></div>' +
-    '<div class="container">' +
-      '<div class="row">' +
-        '<div class="logo">' +
-          '<div class="mark">S</div>' +
-          '<div>' +
-            '<div class="name">SomaAi</div>' +
-            '<div class="sub">NUTRICIÓN INTELIGENTE</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="top-actions">' +
-          '<button class="icon-btn" id="header-perfil">👤</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    '<div class="container"><div class="row">' +
+      '<div class="logo"><div class="mark">S</div><div><div class="name">SomaAi</div><div class="sub">NUTRICIÓN INTELIGENTE</div></div></div>' +
+      '<div class="top-actions"><button class="icon-btn" id="header-perfil">👤</button></div>' +
+    '</div></div>';
   app.appendChild(header);
 
   // Contenido principal
   const main = el('main');
-  main.style.paddingTop = '16px';
-  main.style.paddingBottom = '100px';
-  main.style.overflowY = 'auto';
-  main.style.height = 'calc(100dvh - 65px)';
-
+  main.style.cssText = 'padding-top:16px;padding-bottom:100px;overflow-y:auto;height:calc(100dvh - 65px)';
   const container = el('div', { class: 'container' });
-  
+
   if (state.currentTab === 'hoy') {
-    if (state.loadingDB) {
-      container.innerHTML = renderSkeleton();
-    } else if (state.dbError) {
+    if (state.loadingDB) container.innerHTML = renderSkeleton();
+    else if (state.dbError) {
       container.innerHTML =
         '<div class="card card-pad" style="text-align:center;padding:40px 20px">' +
           '<div style="font-size:48px">⚠️</div>' +
@@ -599,68 +462,47 @@ function render() {
           '<div class="muted" style="font-size:13px;margin-top:8px">No se pudieron cargar las bases de datos.</div>' +
           '<button class="btn btn-primary" id="retry-db" style="margin-top:20px">Reintentar</button>' +
         '</div>';
-      setTimeout(() => {
-        const r = document.getElementById('retry-db');
-        if (r) r.onclick = retryLoadDB;
-      }, 50);
+      setTimeout(() => { const r = document.getElementById('retry-db'); if (r) r.onclick = retryLoadDB; }, 50);
     } else {
       container.appendChild(renderHoy());
     }
+  } else if (state.currentTab === 'buscar' && window.SomaAiSearch) {
+    container.appendChild(window.SomaAiSearch.render());
+  } else if (state.currentTab === 'camara' && window.SomaAiCamera) {
+    container.appendChild(window.SomaAiCamera.render());
+  } else if (state.currentTab === 'perfil' && window.SomaAiProfile) {
+    container.appendChild(window.SomaAiProfile.render());
   }
-  
   main.appendChild(container);
   app.appendChild(main);
 
-  // Menú inferior
+  // Menú inferior con 4 pestañas
   const nav = el('nav');
   nav.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,11,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding-bottom:var(--safe-bottom);z-index:50';
-
   const tabs = [
     { id: 'hoy', icon: '🏠', label: 'Hoy' },
     { id: 'buscar', icon: '🔍', label: 'Buscar' },
+    { id: 'camara', icon: '📷', label: 'Cámara' },
     { id: 'perfil', icon: '👤', label: 'Perfil' },
   ];
-
   const navRow = el('div', { class: 'container' });
   navRow.style.cssText = 'display:flex;justify-content:space-around;padding:8px 0';
-
   tabs.forEach(tab => {
     const isActive = state.currentTab === tab.id;
     const btn = el('button');
-    btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 16px;border-radius:12px;min-width:70px;transition:all .2s' + (isActive ? ';background:rgba(0,255,136,.1)' : '');
+    btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px;border-radius:12px;min-width:60px;transition:all .2s' + (isActive ? ';background:rgba(0,255,136,.1)' : '');
     btn.innerHTML =
       '<span style="font-size:20px' + (isActive ? ';transform:scale(1.1)' : '') + '">' + tab.icon + '</span>' +
       '<span style="font-size:10px;font-weight:700;color:' + (isActive ? 'var(--green)' : 'var(--muted)') + '">' + tab.label + '</span>';
-    btn.onclick = () => {
-      haptic();
-      state.currentTab = tab.id;
-      render();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    btn.onclick = () => { haptic(); state.currentTab = tab.id; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     navRow.appendChild(btn);
   });
   nav.appendChild(navRow);
   app.appendChild(nav);
-
   root.appendChild(app);
 
-  // Handler del perfil en header
   const headerPerfil = document.getElementById('header-perfil');
-  if (headerPerfil) headerPerfil.onclick = () => {
-    haptic();
-    state.currentTab = 'perfil';
-    render();
-  };
-
-  // Renderizar la pestaña activa
-  if (state.currentTab === 'buscar' && window.SomaAiSearch) {
-    container.innerHTML = '';
-    container.appendChild(window.SomaAiSearch.render());
-  }
-  if (state.currentTab === 'perfil' && window.SomaAiProfile) {
-    container.innerHTML = '';
-    container.appendChild(window.SomaAiProfile.render());
-  }
+  if (headerPerfil) headerPerfil.onclick = () => { haptic(); state.currentTab = 'perfil'; render(); };
 }
 
 /* ------------------------- Init ------------------------- */
