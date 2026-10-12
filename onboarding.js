@@ -1,6 +1,7 @@
 /* ============================================================================
-   SomaAi — Onboarding v4
-   Flujo: Bienvenida → Permisos → Cuenta → Datos → Deporte → Días → Objetivo → Resumen
+   SomaAi — Onboarding v5
+   - Permisos compatibles con web Y APK (Capacitor)
+   - Detecta automáticamente el entorno
    ========================================================================== */
 
 const OB_SPORTS = [];
@@ -154,10 +155,12 @@ function obStepPermissions() {
   div.style.maxWidth = '100%';
   div.style.overflowX = 'hidden';
 
+  const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
   const perms = [
     { id: 'camera', icon: '📷', title: 'Cámara', desc: 'Para escanear códigos de barras y fotos de platos' },
     { id: 'notifications', icon: '🔔', title: 'Notificaciones', desc: 'Para recordatorios de comidas y agua' },
-    { id: 'storage', icon: '📁', title: 'Almacenamiento', desc: 'Para exportar tus datos y backups' },
+    { id: 'storage', icon: '📁', title: 'Almacenamiento', desc: 'Para guardar y exportar tus datos' },
     { id: 'vibration', icon: '📳', title: 'Vibración', desc: 'Para feedback háptico al interactuar' },
     { id: 'microphone', icon: '🎤', title: 'Micrófono', desc: 'Para buscar alimentos por voz (opcional)' },
   ];
@@ -167,12 +170,15 @@ function obStepPermissions() {
     '<div class="muted" style="font-size:12px;margin-top:4px;line-height:1.5;word-break:break-word">' +
       'SomaAi necesita algunos permisos para funcionar al máximo. Podés activarlos todos con un toque o uno por uno.' +
     '</div>' +
+    (isNative
+      ? '<div class="pill green" style="margin-top:12px;font-size:10px">✓ Modo app nativa</div>'
+      : '<div class="pill cyan" style="margin-top:12px;font-size:10px">🌐 Modo web (permisos limitados)</div>') +
     '<div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;max-width:100%">';
 
   perms.forEach((p) => {
     const granted = obDraft.permissions[p.id];
     html +=
-      '<div class="perm-card' + (granted ? ' granted' : '') + '" data-perm="' + p.id + '">' +
+      '<div class="perm-card' + (granted ? ' granted' : '') + '" data-perm="' + p.id + '" style="cursor:pointer">' +
         '<div class="perm-icon">' + p.icon + '</div>' +
         '<div style="flex:1;min-width:0">' +
           '<div style="font-size:13px;font-weight:700;word-break:break-word">' + p.title + '</div>' +
@@ -186,6 +192,9 @@ function obStepPermissions() {
     '</div>' +
     '<button class="btn btn-primary" style="margin-top:20px;width:100%" id="perm-all">' +
       '✓ Activar todos los permisos' +
+    '</button>' +
+    '<button class="btn btn-ghost" style="margin-top:8px;width:100%" id="perm-skip">' +
+      'Omitir por ahora' +
     '</button>' +
     '<div class="muted2" style="font-size:11px;text-align:center;margin-top:12px;line-height:1.5;word-break:break-word">' +
       'Podés cambiar estos permisos en cualquier momento desde la configuración del celular.' +
@@ -326,7 +335,7 @@ function obStepSport() {
   return div;
 }
 
-/* ------------------------- PASO 6: Días de entrenamiento ------------------------- */
+/* ------------------------- PASO 6: Días ------------------------- */
 function obStepDays() {
   const div = document.createElement('div');
   div.className = 'card card-pad fade-in-up';
@@ -412,7 +421,6 @@ function obStepSummary() {
   const p = Math.round(targetKcal * macros.p / 100 / 4);
   const c = Math.round(targetKcal * macros.c / 100 / 4);
   const f = Math.round(targetKcal * macros.f / 100 / 9);
-
   const goalDate = obCalcGoalDate();
 
   const div = document.createElement('div');
@@ -487,8 +495,7 @@ function obMacroCard(emoji, label, val, color) {
 
 function obCalcGoalDate() {
   if (obDraft.goal === 'mantener') return null;
-  if (!obDraft.weight || !obDraft.targetWeight) {
-    /* Si no hay targetWeight, usamos el peso actual con una diferencia del 5% */
+  if (!obDraft.targetWeight) {
     const diff = obDraft.weight * 0.05;
     obDraft.targetWeight = obDraft.goal === 'perder' ? obDraft.weight - diff : obDraft.weight + diff;
   }
@@ -508,7 +515,6 @@ function obCalcGoalDate() {
   };
 }
 
-/* ------------------------- Cálculos ------------------------- */
 function obCalcTMB() {
   const w = Number(obDraft.weight) || 72.4;
   const h = Number(obDraft.height) || 168;
@@ -538,11 +544,10 @@ function obBuildNav() {
   div.style.maxWidth = '100%';
   const canBack = obStep > 0;
   const isLast = obStep === OB_STEPS.length - 1;
-  const isPermissions = OB_STEPS[obStep] === 'permissions';
   div.innerHTML =
     (canBack ? '<button class="btn btn-ghost" id="ob-back" style="flex:1;min-width:0">← Atrás</button>' : '') +
     '<button class="btn btn-primary" id="ob-next" style="flex:' + (canBack ? 2 : 1) + ';min-width:0">' +
-      (isLast ? '✓ Empezar a usar SomaAi' : isPermissions ? 'Continuar →' : 'Continuar →') +
+      (isLast ? '✓ Empezar a usar SomaAi' : 'Continuar →') +
     '</button>';
   return div;
 }
@@ -554,16 +559,9 @@ function obAttachHandlers() {
   if (next) next.onclick = obNext;
   if (back) back.onclick = obBack;
 
-  /* Sexo */
   document.querySelectorAll('[data-sex]').forEach((b) => {
-    b.onclick = () => {
-      obDraft.sex = b.dataset.sex;
-      obHaptic();
-      obRender();
-    };
+    b.onclick = () => { obDraft.sex = b.dataset.sex; obHaptic(); obRender(); };
   });
-
-  /* Ranges */
   const ageEl = document.getElementById('ob-age');
   if (ageEl) ageEl.oninput = (e) => { obDraft.age = parseFloat(e.target.value); obRender(); };
   const hEl = document.getElementById('ob-height');
@@ -572,8 +570,6 @@ function obAttachHandlers() {
   if (wEl) wEl.oninput = (e) => { obDraft.weight = parseFloat(e.target.value); obRender(); };
   const dEl = document.getElementById('ob-days');
   if (dEl) dEl.oninput = (e) => { obDraft.trainingDays = parseInt(e.target.value); obRender(); };
-
-  /* Inputs */
   const nameEl = document.getElementById('ob-name');
   if (nameEl) nameEl.oninput = (e) => { obDraft.name = e.target.value; };
   const emailEl = document.getElementById('ob-email');
@@ -581,7 +577,6 @@ function obAttachHandlers() {
   const passEl = document.getElementById('ob-pass');
   if (passEl) passEl.oninput = (e) => { obDraft.password = e.target.value; };
 
-  /* Deporte */
   document.querySelectorAll('[data-sport]').forEach((b) => {
     b.onclick = () => {
       obDraft.sport = b.dataset.sport;
@@ -591,39 +586,34 @@ function obAttachHandlers() {
       obRender();
     };
   });
-
-  /* Objetivo */
   document.querySelectorAll('[data-goal]').forEach((b) => {
-    b.onclick = () => {
-      obDraft.goal = b.dataset.goal;
-      obHaptic();
-      obRender();
-    };
+    b.onclick = () => { obDraft.goal = b.dataset.goal; obHaptic(); obRender(); };
   });
-
-  /* Velocidad */
   document.querySelectorAll('[data-speed]').forEach((b) => {
-    b.onclick = () => {
-      obDraft.speed = parseFloat(b.dataset.speed);
-      obHaptic();
-      obRender();
-    };
+    b.onclick = () => { obDraft.speed = parseFloat(b.dataset.speed); obHaptic(); obRender(); };
   });
 
-  /* Permisos */
   document.querySelectorAll('[data-perm]').forEach((card) => {
     card.onclick = async () => {
       const perm = card.dataset.perm;
+      card.style.opacity = '0.5';
       const granted = await obRequestPermission(perm);
       obDraft.permissions[perm] = granted;
       obHaptic();
       obRender();
+      if (granted) {
+        obToast('✓ ' + obPermName(perm) + ' activado');
+      } else {
+        obToast('⚠️ ' + obPermName(perm) + ' denegado');
+      }
     };
   });
 
   const permAllBtn = document.getElementById('perm-all');
   if (permAllBtn) {
     permAllBtn.onclick = async () => {
+      permAllBtn.disabled = true;
+      permAllBtn.textContent = 'Activando...';
       const perms = ['camera', 'notifications', 'storage', 'vibration', 'microphone'];
       for (const p of perms) {
         const granted = await obRequestPermission(p);
@@ -631,10 +621,19 @@ function obAttachHandlers() {
       }
       obHaptic();
       obRender();
+      obToast('✓ Permisos procesados');
     };
   }
 
-  /* Google Sign-In (simulado por ahora) */
+  const permSkipBtn = document.getElementById('perm-skip');
+  if (permSkipBtn) {
+    permSkipBtn.onclick = () => {
+      obStep++;
+      obHaptic();
+      obRender();
+    };
+  }
+
   const googleBtn = document.getElementById('btn-google-signin');
   if (googleBtn) {
     googleBtn.onclick = () => {
@@ -643,45 +642,136 @@ function obAttachHandlers() {
   }
 }
 
-/* ------------------------- Pedir permisos ------------------------- */
+function obPermName(perm) {
+  const names = {
+    camera: 'Cámara',
+    notifications: 'Notificaciones',
+    storage: 'Almacenamiento',
+    vibration: 'Vibración',
+    microphone: 'Micrófono',
+  };
+  return names[perm] || perm;
+}
+
+/* ------------------------- Pedir permisos (Capacitor + Web) ------------------------- */
 async function obRequestPermission(perm) {
+  const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
   try {
+    /* CÁMARA */
     if (perm === 'camera') {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        stream.getTracks().forEach((t) => t.stop());
-        return true;
+      if (isNative) {
+        try {
+          const { Camera } = await import('@capacitor/camera');
+          const result = await Camera.requestPermissions({ permissions: ['camera'] });
+          return result.camera === 'granted';
+        } catch (e) {
+          console.warn('[perm] Camera error:', e.message);
+          return false;
+        }
+      } else {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            stream.getTracks().forEach((t) => t.stop());
+            return true;
+          } catch (e) {
+            return false;
+          }
+        }
+        return false;
       }
-      return false;
     }
+
+    /* NOTIFICACIONES */
     if (perm === 'notifications') {
-      if ('Notification' in window) {
-        const result = await Notification.requestPermission();
-        return result === 'granted';
+      if (isNative) {
+        try {
+          const { LocalNotifications } = await import('@capacitor/local-notifications');
+          const result = await LocalNotifications.requestPermissions();
+          return result.display === 'granted';
+        } catch (e) {
+          console.warn('[perm] Notif error:', e.message);
+          return false;
+        }
+      } else {
+        if ('Notification' in window) {
+          try {
+            const result = await Notification.requestPermission();
+            return result === 'granted';
+          } catch (e) {
+            return false;
+          }
+        }
+        return false;
       }
-      return false;
     }
+
+    /* STORAGE */
     if (perm === 'storage') {
-      /* En web no hay permisos de storage explícitos. Simulamos concedido */
-      return true;
+      if (isNative) {
+        return true;
+      } else {
+        return true;
+      }
     }
+
+    /* VIBRACIÓN */
     if (perm === 'vibration') {
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-        return true;
+      if (isNative) {
+        try {
+          const { Haptics } = await import('@capacitor/haptics');
+          await Haptics.impact({ style: 'Medium' });
+          return true;
+        } catch (e) {
+          try {
+            const { Haptics } = await import('@capacitor/haptics');
+            return false;
+          } catch (e2) {
+            return false;
+          }
+        }
+      } else {
+        if (navigator.vibrate) {
+          try {
+            navigator.vibrate(50);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        }
+        return false;
       }
-      return false;
     }
+
+    /* MICRÓFONO */
     if (perm === 'microphone') {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach((t) => t.stop());
-        return true;
+      if (isNative) {
+        try {
+          const { SpeechRecognition } = await import('@capacitor-community/speech-recognition');
+          const result = await SpeechRecognition.requestPermissions();
+          return result.speechRecognition === 'granted';
+        } catch (e) {
+          console.warn('[perm] Speech error:', e.message);
+          return false;
+        }
+      } else {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach((t) => t.stop());
+            return true;
+          } catch (e) {
+            return false;
+          }
+        }
+        return false;
       }
-      return false;
     }
+
     return false;
   } catch (e) {
+    console.warn('[perm] Error general:', e.message);
     return false;
   }
 }
@@ -745,7 +835,6 @@ function obFinish() {
   S.state.water = 0;
   S.saveState();
 
-  /* Confetti + haptic + toast */
   if (window.SomaAiUI) {
     window.SomaAiUI.confetti();
     window.SomaAiUI.haptic();
@@ -755,15 +844,12 @@ function obFinish() {
   S.render();
 }
 
-/* ------------------------- Helpers UI ------------------------- */
 function obHaptic() {
   try { navigator.vibrate && navigator.vibrate(20); } catch (e) {}
 }
 
 function obToast(msg) {
-  if (window.SomaAiUI) {
-    window.SomaAiUI.toast(msg);
-  }
+  if (window.SomaAiUI) window.SomaAiUI.toast(msg);
 }
 
 window.SomaAiOnboarding = {
