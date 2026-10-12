@@ -1,9 +1,9 @@
 /* ============================================================================
-   SomaAi — Módulo Perfil
-   - Editar datos personales
-   - Cambiar deporte, actividad, objetivo
+   SomaAi — Módulo Perfil v2
+   - Editar datos con impacto en tiempo real
    - Historial de peso con gráfico
-   - Exportar datos
+   - Exportar datos (JSON descargable)
+   - Reset total / Re-hacer onboarding
    ========================================================================== */
 
 let profileEditMode = false;
@@ -15,20 +15,21 @@ function renderProfile() {
   const s = S.state;
   const p = s.profile;
   const targets = S.calcTargets(p);
+  const imc = Number(p.imc) || (p.weight / ((p.height / 100) ** 2));
+  const imcCat = imc < 18.5 ? 'Bajo peso' : imc < 25 ? 'Normal' : imc < 30 ? 'Sobrepeso' : 'Obesidad';
+  const imcColor = imc < 18.5 ? 'var(--cyan)' : imc < 25 ? 'var(--green)' : imc < 30 ? 'var(--amber)' : 'var(--red)';
 
-  const wrap = S.el('div', { class: 'stack' });
+  const wrap = S.el('div', { class: 'stack fade-in' });
 
-  /* Card 1: Datos personales */
-  const card1 = S.el('div', { class: 'card card-pad' });
+  // Card 1: Cabecera con datos
+  const card1 = S.el('div', { class: 'card card-pad fade-in-up' });
   card1.innerHTML =
     '<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">' +
-      '<div style="width:64px;height:64px;border-radius:20px;' +
-        'background:linear-gradient(135deg,var(--green),var(--cyan));padding:2px">' +
-        '<div style="width:100%;height:100%;border-radius:18px;background:var(--card);' +
-          'display:grid;place-items:center;font-size:28px">👤</div>' +
+      '<div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--green),var(--cyan));padding:2px;flex-shrink:0">' +
+        '<div style="width:100%;height:100%;border-radius:18px;background:var(--card);display:grid;place-items:center;font-size:28px">👤</div>' +
       '</div>' +
       '<div style="flex:1;min-width:0">' +
-        '<div class="h2">' + escapeHtmlProfile(p.name || 'Usuario') + '</div>' +
+        '<div class="h2">' + S.escapeHtml(p.name || 'Usuario') + '</div>' +
         '<div class="muted" style="font-size:12px;margin-top:2px">' +
           (p.sex === 'm' ? 'Masculino' : 'Femenino') + ' · ' + p.age + ' años · ' + p.height + ' cm' +
         '</div>' +
@@ -42,24 +43,24 @@ function renderProfile() {
     '<div class="grid g-3" style="margin-top:20px;gap:8px">' +
       '<div style="padding:12px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">' +
         '<div class="eyebrow">TMB</div>' +
+        '<div class="mono" style="font-size:14px;font-weight:800;margin-top:4px">' + targets.tmb + ' kcal</div>' +
+        '<div class="muted2" style="font-size:10px">Metabolismo basal</div>' +
+      '</div>' +
+      '<div style="padding:12px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">' +
+        '<div class="eyebrow">Objetivo</div>' +
         '<div class="mono" style="font-size:14px;font-weight:800;margin-top:4px">' + targets.kcal + ' kcal</div>' +
-        '<div class="muted2" style="font-size:10px">Objetivo diario</div>' +
+        '<div class="muted2" style="font-size:10px">Con actividad</div>' +
       '</div>' +
       '<div style="padding:12px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">' +
-        '<div class="eyebrow">Peso</div>' +
-        '<div class="mono" style="font-size:14px;font-weight:800;margin-top:4px">' + (Number(p.weight) || 72.4).toFixed(1) + ' kg</div>' +
-        '<div class="muted2" style="font-size:10px">Actual</div>' +
-      '</div>' +
-      '<div style="padding:12px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">' +
-        '<div class="eyebrow">Deporte</div>' +
-        '<div class="mono" style="font-size:14px;font-weight:800;margin-top:4px;text-transform:capitalize">' + (p.sport || 'ninguno') + '</div>' +
-        '<div class="muted2" style="font-size:10px">Preferencia</div>' +
+        '<div class="eyebrow">IMC</div>' +
+        '<div class="mono" style="font-size:14px;font-weight:800;margin-top:4px;color:' + imcColor + '">' + imc.toFixed(1) + '</div>' +
+        '<div class="muted2" style="font-size:10px">' + imcCat + '</div>' +
       '</div>' +
     '</div>';
   wrap.appendChild(card1);
 
-  /* Card 2: Editar datos */
-  const card2 = S.el('div', { class: 'card card-pad' });
+  // Card 2: Editar datos
+  const card2 = S.el('div', { class: 'card card-pad fade-in-up' });
   if (!profileEditMode) {
     card2.innerHTML =
       '<div style="display:flex;justify-content:space-between;align-items:center">' +
@@ -73,6 +74,7 @@ function renderProfile() {
         profileFieldStatic('Altura', p.height + ' cm') +
         profileFieldStatic('Peso', (Number(p.weight) || 72.4).toFixed(1) + ' kg') +
         profileFieldStatic('Actividad', p.activity || 'moderada') +
+        profileFieldStatic('Días/semana', (p.trainingDays || 0) + ' días') +
         profileFieldStatic('Objetivo', p.goal || 'mantener') +
         profileFieldStatic('Deporte', p.sport || 'ninguno') +
       '</div>';
@@ -81,258 +83,240 @@ function renderProfile() {
     const d = profileDraft;
     card2.innerHTML =
       '<div class="h2">Editar datos</div>' +
-      '<div class="grid md-2" style="margin-top:16px;gap:12px">' +
+      '<div class="grid g-2" style="margin-top:16px;gap:12px">' +
         profileFieldInput('Nombre', 'text', d.name, 'name') +
         profileFieldInput('Edad', 'number', d.age, 'age') +
         profileFieldInput('Altura (cm)', 'number', d.height, 'height') +
         profileFieldInput('Peso (kg)', 'number', d.weight, 'weight') +
+      '</div>' +
+      '<div style="margin-top:12px">' +
         profileFieldSelect('Sexo', [{v:'f',l:'Femenino'},{v:'m',l:'Masculino'}], d.sex, 'sex') +
+      '</div>' +
+      '<div style="margin-top:12px">' +
         profileFieldSelect('Actividad',
           [{v:'sedentaria',l:'Sedentaria'},{v:'ligera',l:'Ligera'},{v:'moderada',l:'Moderada'},{v:'alta',l:'Alta'},{v:'atleta',l:'Atleta'}],
           d.activity, 'activity') +
+      '</div>' +
+      '<div style="margin-top:12px">' +
         profileFieldSelect('Objetivo',
           [{v:'perder',l:'Perder grasa'},{v:'mantener',l:'Mantener'},{v:'ganar',l:'Ganar músculo'}],
           d.goal, 'goal') +
-        profileFieldSelect('Deporte',
-          [{v:'ninguno',l:'Ninguno'},{v:'calistenia',l:'Calistenia'},{v:'powerlifting',l:'Powerlifting'},{v:'futbol',l:'Fútbol'},{v:'tenis',l:'Tenis'},{v:'voley',l:'Vóley'},{v:'hockey',l:'Hockey'},{v:'crossfit',l:'CrossFit'},{v:'running',l:'Running'},{v:'natacion',l:'Natación'},{v:'ciclismo',l:'Ciclismo'},{v:'gimnasio',l:'Gimnasio'},{v:'basquet',l:'Básquet'},{v:'bjj',l:'BJJ / MMA'},{v:'yoga',l:'Yoga / Pilates'}],
-          d.sport, 'sport') +
       '</div>' +
       '<div style="display:flex;gap:8px;margin-top:20px">' +
         '<button class="btn btn-ghost" id="profile-cancel" style="flex:1">Cancelar</button>' +
-        '<button class="btn btn-primary" id="profile-save" style="flex:2">✓ Guardar cambios</button>' +
+        '<button class="btn btn-primary" id="profile-save" style="flex:1">Guardar</button>' +
       '</div>';
   }
   wrap.appendChild(card2);
 
-  /* Card 3: Historial de peso */
-  const card3 = S.el('div', { class: 'card card-pad' });
-  const hist = p.weightHistory || [];
-  let histHtml =
-    '<div class="h2">Historial de peso</div>';
-  if (hist.length > 0) {
-    histHtml +=
-      '<div style="margin-top:16px;height:120px;background:var(--surface);border-radius:14px;' +
-        'border:1px solid var(--border);padding:12px;position:relative">' +
-        profileWeightChart(hist) +
-      '</div>' +
-      '<div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto">' +
-        hist.slice().reverse().slice(0, 10).map((w) =>
-          '<div style="display:flex;justify-content:space-between;padding:8px 12px;' +
-            'background:var(--surface);border-radius:10px;border:1px solid var(--border);font-size:12px">' +
-            '<span class="muted">' + formatDateProfile(w.date) + '</span>' +
-            '<span class="mono" style="font-weight:700">' + w.kg.toFixed(1) + ' kg</span>' +
-          '</div>'
-        ).join('') +
-      '</div>';
-  } else {
-    histHtml +=
-      '<div class="muted" style="font-size:12px;margin-top:8px;line-height:1.5">' +
-        'Todavía no registraste pesos. Podés guardar tu peso actual ahora para empezar a trackear.' +
-      '</div>';
-  }
-  histHtml +=
-    '<div style="display:flex;gap:8px;margin-top:16px">' +
-      '<input type="number" id="weight-history-input" class="input" step="0.1" min="30" max="300" ' +
-        'value="' + (Number(p.weight) || 72.4).toFixed(1) + '" style="flex:1" placeholder="kg" />' +
-      '<button class="btn btn-primary btn-sm" id="weight-history-save">Guardar peso</button>' +
-    '</div>';
-  card3.innerHTML = histHtml;
+  // Card 3: Historial de peso
+  const history = p.weightHistory || [];
+  const card3 = S.el('div', { class: 'card card-pad fade-in-up' });
+  card3.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<div class="h2">📊 Historial de peso</div>' +
+      '<button class="btn btn-primary btn-sm" id="add-weight">+ Peso</button>' +
+    '</div>' +
+    (history.length === 0
+      ? '<div class="muted" style="font-size:12px;margin-top:12px;text-align:center;padding:20px 0">Todavía no hay registros. Agregá tu primer peso.</div>'
+      : '<div style="margin-top:16px">' +
+          renderWeightChart(history) +
+          '<div style="margin-top:16px;display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto">' +
+            history.slice().reverse().map(h =>
+              '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">' +
+                '<span class="muted">' + h.date + '</span>' +
+                '<span class="mono" style="font-weight:700">' + h.kg.toFixed(1) + ' kg</span>' +
+              '</div>'
+            ).join('') +
+          '</div>' +
+        '</div>') +
   wrap.appendChild(card3);
 
-  /* Card 4: Exportar / Reset */
-  const card4 = S.el('div', { class: 'card card-pad' });
+  // Card 4: Datos y privacidad
+  const card4 = S.el('div', { class: 'card card-pad fade-in-up' });
   card4.innerHTML =
-    '<div class="h2">Datos y privacidad</div>' +
-    '<div class="muted" style="font-size:12px;margin-top:4px;line-height:1.5">' +
-      'Todos tus datos se guardan 100% en tu celular. No enviamos nada a servidores.' +
+    '<div class="h2">🔒 Datos y privacidad</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">' +
+      '<button class="btn btn-ghost" id="export-data" style="width:100%;justify-content:flex-start">📥 Exportar datos (JSON)</button>' +
+      '<button class="btn btn-ghost" id="redo-onboarding" style="width:100%;justify-content:flex-start">🔄 Re-hacer onboarding</button>' +
+      '<button class="btn btn-ghost" id="reset-all" style="width:100%;justify-content:flex-start;color:var(--red)">⚠️ Reset total</button>' +
     '</div>' +
-    '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">' +
-      '<button class="btn btn-ghost btn-sm" id="profile-export">📥 Exportar JSON</button>' +
-      '<button class="btn btn-ghost btn-sm" id="profile-reonboard">🔄 Re-hacer onboarding</button>' +
-    '</div>' +
-    '<div style="margin-top:20px;padding:16px;border-radius:14px;' +
-      'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25)">' +
-      '<div style="font-size:13px;font-weight:700;color:var(--red)">⚠️ Zona peligrosa</div>' +
-      '<div class="muted" style="font-size:11px;margin-top:6px;line-height:1.5">' +
-        'Estas acciones no se pueden deshacer. Asegurate de exportar tus datos antes.' +
-      '</div>' +
-      '<button class="btn btn-ghost btn-sm" id="profile-reset" style="margin-top:12px;' +
-        'background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:var(--red)">' +
-        '🗑️ Borrar todos los datos' +
-      '</button>' +
-    '</div>';
+    '<div class="muted2" style="font-size:10px;margin-top:12px;text-align:center">SomaAi v' + (s.version || '1.0') + ' · Los datos se guardan solo en tu dispositivo</div>';
   wrap.appendChild(card4);
 
-  /* Handlers */
+  // Handlers
   setTimeout(() => {
+    // Editar
     const editBtn = document.getElementById('profile-edit');
-    if (editBtn) editBtn.onclick = () => { profileEditMode = true; profileDraft = { ...p }; rerenderProfile(); };
-
+    if (editBtn) editBtn.onclick = () => { profileEditMode = true; profileDraft = { ...p }; S.haptic(); render(); };
     const cancelBtn = document.getElementById('profile-cancel');
-    if (cancelBtn) cancelBtn.onclick = () => { profileEditMode = false; profileDraft = null; rerenderProfile(); };
-
+    if (cancelBtn) cancelBtn.onclick = () => { profileEditMode = false; profileDraft = null; render(); };
     const saveBtn = document.getElementById('profile-save');
     if (saveBtn) saveBtn.onclick = () => {
-      const d = profileDraft;
-      if (!d) return;
-      S.state.profile = {
-        ...S.state.profile,
-        name: d.name || 'Usuario',
-        sex: d.sex || 'f',
-        age: Number(d.age) || 28,
-        height: Number(d.height) || 168,
-        weight: Number(d.weight) || 72.4,
-        activity: d.activity || 'moderada',
-        goal: d.goal || 'mantener',
-        sport: d.sport || 'ninguno',
-      };
-      S.state.weight = Number(d.weight) || 72.4;
+      if (!profileDraft) return;
+      S.state.profile = { ...S.state.profile, ...profileDraft };
+      S.state.profile.weight = Number(S.state.profile.weight) || 72.4;
+      S.state.profile.height = Number(S.state.profile.height) || 168;
+      S.state.profile.age = Number(S.state.profile.age) || 28;
+      S.state.profile.imc = S.state.profile.weight / ((S.state.profile.height / 100) ** 2);
+      S.state.weight = S.state.profile.weight;
       S.saveState();
       profileEditMode = false;
       profileDraft = null;
       S.render();
+      S.toast('✅ Datos guardados');
     };
 
-    document.querySelectorAll('[data-pfield]').forEach((el) => {
-      el.oninput = (e) => { if (profileDraft) profileDraft[el.dataset.pfield] = e.target.value; };
-    });
-    document.querySelectorAll('[data-pselect]').forEach((el) => {
-      el.onchange = (e) => { if (profileDraft) profileDraft[el.dataset.pselect] = e.target.value; };
-    });
-
-    const wSave = document.getElementById('weight-history-save');
-    if (wSave) wSave.onclick = () => {
-      const input = document.getElementById('weight-history-input');
-      const v = parseFloat(input.value);
-      if (isNaN(v) || v < 30 || v > 300) return;
-      const today = new Date().toISOString().slice(0, 10);
-      const hist = [...(S.state.profile.weightHistory || [])];
-      const idx = hist.findIndex((h) => h.date === today);
-      const entry = { date: today, kg: v };
-      if (idx >= 0) hist[idx] = entry;
-      else hist.push(entry);
-      hist.sort((a, b) => a.date.localeCompare(b.date));
-      S.state.profile.weightHistory = hist;
-      S.state.weight = v;
-      S.state.profile.weight = v;
-      S.saveState();
-      S.render();
-    };
-
-    const exportBtn = document.getElementById('profile-export');
-    if (exportBtn) exportBtn.onclick = () => {
-      try {
-        const data = JSON.stringify(S.state, null, 2);
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'somaai-backup-' + new Date().toISOString().slice(0, 10) + '.json';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
-      } catch (e) {
-        alert('Error al exportar: ' + e.message);
+    // Agregar peso
+    const addWeight = document.getElementById('add-weight');
+    if (addWeight) addWeight.onclick = () => {
+      const val = prompt('Nuevo peso (kg):', S.state.weight);
+      if (val && !isNaN(val)) {
+        const kg = parseFloat(val);
+        S.state.weight = kg;
+        S.state.profile.weight = kg;
+        S.state.profile.imc = kg / ((S.state.profile.height / 100) ** 2);
+        if (!S.state.profile.weightHistory) S.state.profile.weightHistory = [];
+        S.state.profile.weightHistory.push({ date: new Date().toISOString().slice(0, 10), kg });
+        S.saveState();
+        render();
+        S.toast('✅ Peso registrado');
       }
     };
 
-    const reonboardBtn = document.getElementById('profile-reonboard');
-    if (reonboardBtn) reonboardBtn.onclick = () => {
-      if (confirm('¿Querés re-hacer el onboarding? Tus datos actuales se mantienen hasta que termines.')) {
+    // Exportar datos
+    const exportBtn = document.getElementById('export-data');
+    if (exportBtn) exportBtn.onclick = () => {
+      const data = {
+        exportedAt: new Date().toISOString(),
+        version: S.state.version,
+        profile: S.state.profile,
+        entries: S.state.entries,
+        water: S.state.water,
+        customFoods: S.state.customFoods,
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'somaai-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      S.toast('📥 Datos exportados');
+    };
+
+    // Re-hacer onboarding
+    const redoBtn = document.getElementById('redo-onboarding');
+    if (redoBtn) redoBtn.onclick = () => {
+      S.showConfirm('¿Re-hacer onboarding?', 'Se reiniciará tu perfil pero se mantienen tus alimentos y bases de datos.', () => {
         S.state.profile.onboarded = false;
         S.saveState();
         S.render();
-      }
+      });
     };
 
-    const resetBtn = document.getElementById('profile-reset');
+    // Reset total
+    const resetBtn = document.getElementById('reset-all');
     if (resetBtn) resetBtn.onclick = () => {
-      if (confirm('¿Borrar TODOS los datos? Esta acción no se puede deshacer.')) {
-        if (confirm('¿Estás SEGURO? Se va a borrar todo el progreso.')) {
-          localStorage.removeItem('somaai_state');
-          location.reload();
-        }
-      }
+      S.showConfirm('⚠️ Reset total', 'Esto borrará TODOS tus datos: perfil, alimentos del día, historial de peso y alimentos personalizados. No se puede deshacer.', () => {
+        localStorage.removeItem('somaai_state');
+        location.reload();
+      });
     };
-  }, 0);
+  }, 50);
 
   return wrap;
 }
 
-function rerenderProfile() {
-  const S = window.SomaAi;
-  if (!S) return;
-  const main = document.querySelector('main.container');
-  if (!main) return;
-  main.innerHTML = '';
-  main.appendChild(renderProfile());
+/* ------------------------- Gráfico de peso (SVG simple) ------------------------- */
+function renderWeightChart(history) {
+  if (history.length < 2) return '';
+  const data = history.slice(-30); // últimos 30 registros
+  const minKg = Math.min(...data.map(d => d.kg)) - 1;
+  const maxKg = Math.max(...data.map(d => d.kg)) + 1;
+  const range = maxKg - minKg || 1;
+  const width = 300;
+  const height = 100;
+  const padding = 10;
+  const usableW = width - padding * 2;
+  const usableH = height - padding * 2;
+
+  const points = data.map((d, i) => {
+    const x = padding + (i / (data.length - 1)) * usableW;
+    const y = padding + usableH - ((d.kg - minKg) / range) * usableH;
+    return { x, y, kg: d.kg };
+  });
+
+  const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ');
+  const areaD = pathD + ' L' + points[points.length - 1].x.toFixed(1) + ' ' + (height - padding) + ' L' + points[0].x.toFixed(1) + ' ' + (height - padding) + ' Z';
+
+  const diff = data[data.length - 1].kg - data[0].kg;
+  const diffColor = diff < 0 ? 'var(--green)' : diff > 0 ? 'var(--amber)' : 'var(--muted)';
+
+  return '<div style="background:var(--surface);border-radius:12px;padding:12px;border:1px solid var(--border)">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+      '<span class="muted2" style="font-size:10px">Últimos ' + data.length + ' registros</span>' +
+      '<span class="mono" style="font-size:12px;font-weight:700;color:' + diffColor + '">' +
+        (diff > 0 ? '+' : '') + diff.toFixed(1) + ' kg' +
+      '</span>' +
+    '</div>' +
+    '<svg viewBox="0 0 ' + width + ' ' + height + '" style="width:100%;height:auto">' +
+      '<defs><linearGradient id="wgrad" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#00ff88" stop-opacity="0.3"/>' +
+        '<stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>' +
+      '</linearGradient></defs>' +
+      '<path d="' + areaD + '" fill="url(#wgrad)"/>' +
+      '<path d="' + pathD + '" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>' +
+      points.map(p => '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="2" fill="#00ff88"/>').join('') +
+    '</svg>' +
+    '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px" class="muted2">' +
+      '<span>' + data[0].date.slice(5) + '</span>' +
+      '<span>' + data[data.length - 1].date.slice(5) + '</span>' +
+    '</div>' +
+  '</div>';
 }
 
+/* ------------------------- Helpers de campos ------------------------- */
 function profileFieldStatic(label, value) {
-  return '<div style="display:flex;justify-content:space-between;align-items:center;' +
-    'padding:10px 12px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">' +
-    '<span class="muted2" style="font-size:12px">' + label + '</span>' +
-    '<span class="mono" style="font-size:13px;font-weight:700;text-transform:capitalize">' + escapeHtmlProfile(String(value)) + '</span>' +
+  return '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">' +
+    '<span class="muted" style="font-size:13px">' + label + '</span>' +
+    '<span style="font-size:13px;font-weight:700">' + value + '</span>' +
   '</div>';
 }
 
 function profileFieldInput(label, type, value, name) {
   return '<label style="display:flex;flex-direction:column;gap:6px">' +
     '<span class="eyebrow">' + label + '</span>' +
-    '<input type="' + type + '" class="input" value="' + escapeHtmlProfile(String(value == null ? '' : value)) + '" ' +
-      'data-pfield="' + name + '" />' +
+    '<input type="' + type + '" class="input" data-field="' + name + '" value="' + (value || '') + '" style="width:100%;padding:10px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" />' +
   '</label>';
 }
 
-function profileFieldSelect(label, opts, value, name) {
+function profileFieldSelect(label, options, value, name) {
   return '<label style="display:flex;flex-direction:column;gap:6px">' +
     '<span class="eyebrow">' + label + '</span>' +
-    '<select class="input" data-pselect="' + name + '">' +
-      opts.map((o) => '<option value="' + o.v + '"' + (o.v === value ? ' selected' : '') + '>' + o.l + '</option>').join('') +
+    '<select class="input" data-field="' + name + '" style="width:100%;padding:10px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px">' +
+      options.map(o => '<option value="' + o.v + '"' + (o.v === value ? ' selected' : '') + '>' + o.l + '</option>').join('') +
     '</select>' +
   '</label>';
 }
 
-function profileWeightChart(history) {
-  if (!history || history.length === 0) return '';
-  const W = 100, H = 40;
-  const pts = history.map((h) => h.kg);
-  const min = Math.min(...pts), max = Math.max(...pts);
-  const span = (max - min) || 1;
-  const coords = pts.map((v, i) => {
-    const x = pts.length === 1 ? W / 2 : (i / (pts.length - 1)) * W;
-    const y = H - ((v - min) / span) * (H - 8) - 4;
-    return [x, y];
-  });
-  const d = coords.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
-  const area = d + ' L ' + W + ' ' + H + ' L 0 ' + H + ' Z';
-  return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:100%" preserveAspectRatio="none">' +
-    '<defs>' +
-      '<linearGradient id="pwline" x1="0" y1="0" x2="1" y2="0">' +
-        '<stop offset="0%" stop-color="#ec4899"/>' +
-        '<stop offset="100%" stop-color="#8b5cf6"/>' +
-      '</linearGradient>' +
-      '<linearGradient id="pwfill" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0%" stop-color="#ec4899" stop-opacity="0.3"/>' +
-        '<stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>' +
-      '</linearGradient>' +
-    '</defs>' +
-    '<path d="' + area + '" fill="url(#pwfill)"/>' +
-    '<path d="' + d + '" fill="none" stroke="url(#pwline)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>' +
-  '</svg>';
-}
+/* ------------------------- Attach de handlers para inputs ------------------------- */
+document.addEventListener('input', (e) => {
+  if (e.target.dataset && e.target.dataset.field && profileDraft) {
+    const field = e.target.dataset.field;
+    if (field === 'age' || field === 'height' || field === 'weight') {
+      profileDraft[field] = parseFloat(e.target.value) || 0;
+    } else {
+      profileDraft[field] = e.target.value;
+    }
+  }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.dataset && e.target.dataset.field && profileDraft) {
+    profileDraft[e.target.dataset.field] = e.target.value;
+  }
+});
 
-function formatDateProfile(dateStr) {
-  try {
-    const d = new Date(dateStr + 'T12:00:00');
-    return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
-  } catch (e) { return dateStr; }
-}
-
-function escapeHtmlProfile(s) {
-  return String(s || '').replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  })[c]);
-}
-
-window.SomaAiProfile = { render: renderProfile };
+window.SomaAiProfile = {
+  render: renderProfile,
+};
