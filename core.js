@@ -1,26 +1,18 @@
 /* ============================================================================
-   SomaAi v1.7 — Núcleo con carga de DB robusta
+   SomaAi v1.8 — Núcleo con init() a prueba de balas
    ========================================================================== */
 
 const state = {
-  version: '1.7.0',
-  platform: 'web',
+  version: '1.8.0', platform: 'web',
   date: new Date().toISOString().slice(0, 10),
-  water: 0,
-  weight: 72.4,
-  entries: [],
+  water: 0, weight: 72.4, entries: [],
   profile: {
     name: 'Usuario', sex: 'f', age: 28, height: 168, weight: 72.4,
     imc: 25.6, activity: 'moderada', trainingDays: 3, goal: 'mantener',
     sport: 'ninguno', streak: 1, onboarded: false,
   },
-  foods: [],
-  foodsLoaded: false,
-  foodsCount: 0,
-  customFoods: [],
-  currentTab: 'hoy',
-  loadingDB: false,
-  dbError: false,
+  foods: [], foodsLoaded: false, foodsCount: 0, customFoods: [],
+  currentTab: 'hoy', loadingDB: false, dbError: false,
 };
 
 function saveState() {
@@ -56,13 +48,11 @@ function loadState() {
       if (state.profile.weight) state.weight = state.profile.weight;
     }
     const today = new Date().toISOString().slice(0, 10);
-    if (state.date !== today) {
-      state.entries = []; state.water = 0; state.date = today; saveState();
-    }
+    if (state.date !== today) { state.entries = []; state.water = 0; state.date = today; saveState(); }
   } catch (e) {}
 }
 
-/* ------------------------- Carga de Bases de Datos ------------------------- */
+/* ------------------------- Bases de Datos ------------------------- */
 const DATABASES = [
   'data/database.json', 'data/db-marcas-lacteos.json', 'data/db-marcas-galletitas.json',
   'data/db-marcas-golosinas.json', 'data/db-marcas-snacks.json', 'data/db-marcas-congelados.json',
@@ -73,7 +63,7 @@ async function loadAllDatabases() {
   if (state.foodsLoaded) return;
   state.loadingDB = true;
   state.dbError = false;
-  render();
+  try { render(); } catch (e) {}
   const allFoods = [];
   for (const db of DATABASES) {
     try {
@@ -81,14 +71,11 @@ async function loadAllDatabases() {
       if (!res.ok) continue;
       const data = await res.json();
       if (data.foods && Array.isArray(data.foods)) allFoods.push(...data.foods);
-    } catch (e) {
-      console.warn('[SomaAi] Error cargando ' + db + ':', e.message);
-    }
+    } catch (e) { console.warn('[SomaAi] Error cargando ' + db + ':', e.message); }
   }
   if (allFoods.length === 0) {
-    state.dbError = true;
-    state.loadingDB = false;
-    render();
+    state.dbError = true; state.loadingDB = false;
+    try { render(); } catch (e) {}
     return;
   }
   if (state.customFoods && state.customFoods.length) allFoods.push(...state.customFoods);
@@ -96,12 +83,10 @@ async function loadAllDatabases() {
   state.foodsCount = allFoods.length;
   state.foodsLoaded = true;
   state.loadingDB = false;
-  render();
+  try { render(); } catch (e) {}
 }
 
-function retryLoadDB() {
-  state.foodsLoaded = false; state.dbError = false; loadAllDatabases();
-}
+function retryLoadDB() { state.foodsLoaded = false; state.dbError = false; loadAllDatabases(); }
 
 /* ------------------------- Cálculos ------------------------- */
 function calcTargets(profile) {
@@ -266,7 +251,7 @@ function renderHoy() {
   return wrap;
 }
 
-/* ------------------------- Modal / Toast / Haptic ------------------------- */
+/* ------------------------- Modal / Toast ------------------------- */
 function showConfirm(title, message, onConfirm) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:1000;display:grid;place-items:center;padding:24px;opacity:0;transition:opacity .2s';
@@ -357,23 +342,37 @@ window.SomaAi = {
   toast, haptic, escapeHtml, showConfirm,
 };
 
+/* ------------------------- INIT A PRUEBA DE BALAS ------------------------- */
 async function init() {
+  const root = document.getElementById('app-root');
   try {
     loadState();
-    if (!state.profile.onboarded && window.SomaAiOnboarding) {
+    const needsOnboarding = !state.profile.onboarded;
+
+    if (needsOnboarding && window.SomaAiOnboarding) {
+      // Renderizar el onboarding INMEDIATAMENTE (sin esperar al fetch)
       try {
-        await window.SomaAiOnboarding.loadConfig();
         window.SomaAiOnboarding.render();
       } catch (e) {
-        document.getElementById('app-root').innerHTML = '<div style="padding:20px;color:#fff;font-family:monospace;font-size:12px">Error en onboarding init: ' + e.message + '</div>';
+        if (root) root.innerHTML = '<div style="padding:20px;color:#fff">Error onboarding render: ' + e.message + '</div>';
       }
-      loadAllDatabases();
+      // Cargar la config en segundo plano (sin bloquear)
+      window.SomaAiOnboarding.loadConfig().catch(e => console.warn('Config error:', e));
+      // Cargar bases en segundo plano
+      loadAllDatabases().catch(e => console.warn('DB error:', e));
       return;
     }
-    render();
-    await loadAllDatabases();
+
+    // Ya onboarded: renderizar dashboard
+    try {
+      render();
+    } catch (e) {
+      if (root) root.innerHTML = '<div style="padding:20px;color:#fff">Error render: ' + e.message + '</div>';
+    }
+    // Cargar bases en segundo plano
+    loadAllDatabases().catch(e => console.warn('DB error:', e));
   } catch (e) {
-    console.error('Error en init:', e);
+    if (root) root.innerHTML = '<div style="padding:20px;color:#fff">Error init: ' + e.message + '</div>';
   }
 }
 
