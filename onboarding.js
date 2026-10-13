@@ -1,5 +1,5 @@
 /* ============================================================================
-   SomaAi — Onboarding v8 con permisos REALES
+   SomaAi — Onboarding v9 (Arreglado y completo)
    ========================================================================== */
 
 const OB_SPORTS = [];
@@ -25,9 +25,20 @@ async function obLoadConfig() {
     OB_GOALS.push(...(data.goals || []));
     OB_SPEEDS.push(...(data.speeds || []));
   } catch (e) {
-    // Fallback si falla
-    OB_SPORTS.push({ id: 'ninguno', name: 'Ninguno', emoji: '🛋️' }, { id: 'futbol', name: 'Fútbol', emoji: '⚽' }, { id: 'gym', name: 'Gym', emoji: '🏋️' });
-    OB_GOALS.push({ id: 'perder', name: 'Perder grasa', emoji: '📉', adj: -0.15 }, { id: 'mantener', name: 'Mantener', emoji: '⚖️', adj: 0 }, { id: 'ganar', name: 'Ganar músculo', emoji: '📈', adj: 0.15 });
+    OB_SPORTS.push(
+      { id: 'ninguno', name: 'Ninguno', emoji: '🛋️', kcalExtra: 0 },
+      { id: 'futbol', name: 'Fútbol', emoji: '⚽', kcalExtra: 300 },
+      { id: 'gym', name: 'Gym', emoji: '🏋️', kcalExtra: 250 },
+      { id: 'running', name: 'Running', emoji: '🏃', kcalExtra: 400 },
+      { id: 'ciclismo', name: 'Ciclismo', emoji: '🚴', kcalExtra: 350 },
+      { id: 'natacion', name: 'Natación', emoji: '🏊', kcalExtra: 350 },
+      { id: 'crossfit', name: 'CrossFit', emoji: '💪', kcalExtra: 400 },
+    );
+    OB_GOALS.push(
+      { id: 'perder', name: 'Perder grasa', emoji: '📉', adj: -0.15 },
+      { id: 'mantener', name: 'Mantener', emoji: '⚖️', adj: 0 },
+      { id: 'ganar', name: 'Ganar músculo', emoji: '📈', adj: 0.15 },
+    );
   }
 }
 
@@ -116,32 +127,27 @@ async function obRequestPermissions() {
   const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
 
   if (isCapacitor) {
-    // Cámara
     try {
       const { Camera } = await import('@capacitor/camera');
       const camStatus = await Camera.requestPermissions({ permissions: ['camera'] });
       results.camera = camStatus.camera === 'granted';
     } catch (e) { results.camera = false; }
-    // Notificaciones
     try {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
       const notifStatus = await LocalNotifications.requestPermissions();
       results.notifications = notifStatus.display === 'granted';
     } catch (e) { results.notifications = false; }
-    // Vibración
     try {
       const { Haptics } = await import('@capacitor/haptics');
       await Haptics.vibrate();
       results.vibration = true;
     } catch (e) { results.vibration = true; }
-    // Micrófono
     try {
       const { SpeechRecognition } = await import('@capacitor-community/speech-recognition');
       const micStatus = await SpeechRecognition.requestPermissions();
       results.microphone = micStatus.speechRecognition === 'granted';
     } catch (e) { results.microphone = false; }
   } else {
-    // Web
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       stream.getTracks().forEach(t => t.stop());
@@ -315,25 +321,53 @@ function obBack() { if (obStep > 0) { obStep--; obRender(); window.scrollTo({ to
 
 function obFinish() {
   const S = window.SomaAi;
-  if (!S) return;
-  const weight = Number(obDraft.weight) || 72.4;
-  const height = Number(obDraft.height) || 168;
-  const age = Number(obDraft.age) || 28;
-  const sex = obDraft.sex || 'f';
-  const days = Number(obDraft.trainingDays) || 0;
-  let activity = 'moderada';
-  if (days <= 1) activity = 'sedentaria'; else if (days <= 3) activity = 'ligera'; else if (days <= 5) activity = 'moderada'; else if (days <= 6) activity = 'alta'; else activity = 'atleta';
-  const imc = weight / ((height / 100) ** 2);
-  S.state.profile = {
-    name: obDraft.name || 'Usuario', sex: sex, age: age, height: height, weight: weight, imc: imc,
-    activity: activity, trainingDays: days, goal: obDraft.goal || 'mantener', sport: obDraft.sport || 'ninguno',
-    speed: obDraft.speed || 0.5, streak: 1, onboarded: true, onboardedAt: new Date().toISOString(),
-    email: obDraft.email || null, weightHistory: [{ date: new Date().toISOString().slice(0, 10), kg: weight }],
-    permissions: obDraft.permissions,
-  };
-  S.state.weight = weight; S.state.entries = []; S.state.water = 0;
-  S.saveState();
-  S.safeRender();
+  if (!S) {
+    alert('Error: SomaAi no está cargado');
+    return;
+  }
+  try {
+    const weight = Number(obDraft.weight) || 72.4;
+    const height = Number(obDraft.height) || 168;
+    const age = Number(obDraft.age) || 28;
+    const sex = obDraft.sex || 'f';
+    const days = Number(obDraft.trainingDays) || 0;
+    let activity = 'moderada';
+    if (days <= 1) activity = 'sedentaria';
+    else if (days <= 3) activity = 'ligera';
+    else if (days <= 5) activity = 'moderada';
+    else if (days <= 6) activity = 'alta';
+    else activity = 'atleta';
+    const imc = weight / ((height / 100) ** 2);
+    
+    S.state.profile = {
+      name: obDraft.name || 'Usuario',
+      sex: sex, age: age, height: height, weight: weight, imc: imc,
+      activity: activity, trainingDays: days,
+      goal: obDraft.goal || 'mantener',
+      sport: obDraft.sport || 'ninguno',
+      speed: obDraft.speed || 0.5,
+      streak: 1,
+      onboarded: true,
+      onboardedAt: new Date().toISOString(),
+      email: obDraft.email || null,
+      weightHistory: [{ date: new Date().toISOString().slice(0, 10), kg: weight }],
+      permissions: obDraft.permissions,
+    };
+    S.state.weight = weight;
+    S.state.entries = [];
+    S.state.water = 0;
+    S.saveState();
+    
+    // Forzar el render del dashboard
+    if (S.render) {
+      S.render();
+    } else {
+      location.reload();
+    }
+  } catch (e) {
+    console.error('Error en obFinish:', e);
+    alert('Error al guardar: ' + e.message);
+  }
 }
 
 function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
