@@ -1,0 +1,27 @@
+{
+  "category": "frutas",
+  "label": "Frutas",
+  "version": "1.0",
+  "foods": [
+    { "id": "fruta_manzana", "name": "Manzana roja", "emoji": "🍎", "kcal": 52, "p": 0.3, "c": 14, "f": 0.2, "fib": 2.4 },
+    { "id": "fruta_manzana_verde", "name": "Manzana verde", "emoji": "🍏", "kcal": 58, "p": 0.4, "c": 15, "f": 0.3, "fib": 2.6 },
+    { "id": "fruta_banana", "name": "Banana", "emoji": "🍌", "kcal": 89, "p": 1.1, "c": 23, "f": 0.3, "fib": 2.6 },
+    { "id": "fruta_naranja", "name": "Naranja", "emoji": "🍊", "kcal": 47, "p": 0.9, "c": 12, "f": 0.1, "fib": 2.4 },
+    { "id": "fruta_pera", "name": "Pera", "emoji": "🍐", "kcal": 57, "p": 0.4, "c": 15, "f": 0.1, "fib": 3.1 },
+    { "id": "fruta_uva", "name": "Uva", "emoji": "🍇", "kcal": 69, "p": 0.7, "c": 18, "f": 0.2, "fib": 0.9 },
+    { "id": "fruta_frutilla", "name": "Frutilla", "emoji": "🍓", "kcal": 32, "p": 0.7, "c": 7.7, "f": 0.3, "fib": 2.0 },
+    { "id": "fruta_kiwi", "name": "Kiwi", "emoji": "🥝", "kcal": 61, "p": 1.1, "c": 15, "f": 0.5, "fib": 3.0 },
+    { "id": "fruta_palta", "name": "Palta", "emoji": "🥑", "kcal": 160, "p": 2.0, "c": 9, "f": 15, "fib": 6.7 },
+    { "id": "fruta_anana", "name": "Ananá", "emoji": "🍍", "kcal": 50, "p": 0.5, "c": 13, "f": 0.1, "fib": 1.4 },
+    { "id": "fruta_mango", "name": "Mango", "emoji": "🥭", "kcal": 60, "p": 0.8, "c": 15, "f": 0.4, "fib": 1.6 },
+    { "id": "fruta_sandia", "name": "Sandía", "emoji": "🍉", "kcal": 30, "p": 0.6, "c": 8, "f": 0.2, "fib": 0.4 },
+    { "id": "fruta_melon", "name": "Melón", "emoji": "🍈", "kcal": 34, "p": 0.8, "c": 8, "f": 0.2, "fib": 0.9 },
+    { "id": "fruta_durazno", "name": "Durazno", "emoji": "🍑", "kcal": 39, "p": 0.9, "c": 10, "f": 0.3, "fib": 1.5 },
+    { "id": "fruta_cereza", "name": "Cereza", "emoji": "🍒", "kcal": 63, "p": 1.1, "c": 16, "f": 0.2, "fib": 2.1 },
+    { "id": "fruta_limon", "name": "Limón", "emoji": "🍋", "kcal": 29, "p": 1.1, "c": 9, "f": 0.3, "fib": 2.8 },
+    { "id": "fruta_mandarina", "name": "Mandarina", "emoji": "🍊", "kcal": 53, "p": 0.8, "c": 13, "f": 0.3, "fib": 1.8 },
+    { "id": "fruta_arandano", "name": "Arándano", "emoji": "🫐", "kcal": 57, "p": 0.7, "c": 14, "f": 0.3, "fib": 2.4 },
+    { "id": "fruta_frambuesa", "name": "Frambuesa", "emoji": "🍇", "kcal": 52, "p": 1.2, "c": 12, "f": 0.7, "fib": 6.5 },
+    { "id": "fruta_papaya", "name": "Papaya", "emoji": "🥭", "kcal": 43, "p": 0.5, "c": 11, "f": 0.3, "fib": 1.7 }
+  ]
+}
