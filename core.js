@@ -1,11 +1,9 @@
 /* ============================================================================
-   SomaAi v1.8 — Núcleo con render único (sin carreras)
+   SomaAi v2.0 — Núcleo limpio sin carreras
    ========================================================================== */
 
-let RENDER_LOCK = false;
-
 const state = {
-  version: '1.8.0',
+  version: '2.0.0',
   platform: 'web',
   date: new Date().toISOString().slice(0, 10),
   water: 0,
@@ -23,6 +21,7 @@ const state = {
   currentTab: 'hoy',
   loadingDB: false,
   dbError: false,
+  appReady: false,
 };
 
 function saveState() {
@@ -64,7 +63,6 @@ function loadState() {
   } catch (e) {}
 }
 
-/* ------------------------- Bases de datos ------------------------- */
 const DATABASES = [
   'data/database.json', 'data/db-marcas-lacteos.json', 'data/db-marcas-galletitas.json',
   'data/db-marcas-golosinas.json', 'data/db-marcas-snacks.json', 'data/db-marcas-congelados.json',
@@ -75,7 +73,6 @@ async function loadAllDatabases() {
   if (state.foodsLoaded || state.loadingDB) return;
   state.loadingDB = true;
   state.dbError = false;
-  // No llamar a render() acá para evitar carreras
   const allFoods = [];
   for (const db of DATABASES) {
     try {
@@ -88,7 +85,6 @@ async function loadAllDatabases() {
   if (allFoods.length === 0) {
     state.dbError = true;
     state.loadingDB = false;
-    safeRender();
     return;
   }
   if (state.customFoods && state.customFoods.length) allFoods.push(...state.customFoods);
@@ -96,14 +92,8 @@ async function loadAllDatabases() {
   state.foodsCount = allFoods.length;
   state.foodsLoaded = true;
   state.loadingDB = false;
-  safeRender();
 }
 
-function retryLoadDB() {
-  state.foodsLoaded = false; state.dbError = false; state.loadingDB = false; loadAllDatabases();
-}
-
-/* ------------------------- Cálculos ------------------------- */
 function calcTargets(profile) {
   const w = Number(profile.weight) || 72.4;
   const h = Number(profile.height) || 168;
@@ -136,7 +126,6 @@ function calcTotals(entries) {
   return { kcal: Math.round(t.kcal), p: Math.round(t.p), c: Math.round(t.c), f: Math.round(t.f) };
 }
 
-/* ------------------------- DOM Helpers ------------------------- */
 function el(tag, props, children) {
   const node = document.createElement(tag);
   if (props) {
@@ -182,7 +171,6 @@ function renderSkeleton() {
   return '<div class="card card-pad" style="margin-bottom:16px"><div class="skel" style="height:16px;width:40%;margin-bottom:12px"></div><div class="skel" style="height:40px;width:80%;margin-bottom:12px"></div><div class="skel" style="height:12px;width:60%"></div></div><div class="card card-pad" style="margin-bottom:16px"><div class="skel" style="height:80px;width:100%"></div></div><div class="card card-pad"><div class="skel" style="height:60px;width:100%"></div></div>';
 }
 
-/* ------------------------- Vista HOY ------------------------- */
 function renderHoy() {
   const targets = calcTargets(state.profile);
   const totals = calcTotals(state.entries);
@@ -229,10 +217,10 @@ function renderHoy() {
     wrap.appendChild(distCard);
     setTimeout(() => {
       document.querySelectorAll('[data-del-idx]').forEach(btn => {
-        btn.onclick = () => { state.entries.splice(parseInt(btn.dataset.delIdx), 1); saveState(); safeRender(); toast('🗑️ Alimento eliminado'); };
+        btn.onclick = () => { state.entries.splice(parseInt(btn.dataset.delIdx), 1); saveState(); render(); toast('🗑️ Alimento eliminado'); };
       });
       const clearDay = document.getElementById('clear-day');
-      if (clearDay) clearDay.onclick = () => { showConfirm('¿Vaciar el día?', 'Se eliminarán todos los alimentos de hoy.', () => { state.entries = []; saveState(); safeRender(); toast('🗑️ Día vaciado'); }); };
+      if (clearDay) clearDay.onclick = () => { showConfirm('¿Vaciar el día?', 'Se eliminarán todos los alimentos de hoy.', () => { state.entries = []; saveState(); render(); toast('🗑️ Día vaciado'); }); };
     }, 50);
   }
 
@@ -247,9 +235,9 @@ function renderHoy() {
   wrap.appendChild(row);
 
   setTimeout(() => {
-    document.querySelectorAll('[data-water]').forEach((b) => { b.onclick = () => { haptic(); state.water += parseInt(b.dataset.water); saveState(); safeRender(); }; });
+    document.querySelectorAll('[data-water]').forEach((b) => { b.onclick = () => { haptic(); state.water += parseInt(b.dataset.water); saveState(); render(); }; });
     const resetWater = document.querySelector('[data-water-reset]');
-    if (resetWater) resetWater.onclick = () => { haptic(); state.water = 0; saveState(); safeRender(); };
+    if (resetWater) resetWater.onclick = () => { haptic(); state.water = 0; saveState(); render(); };
     const weightEdit = document.getElementById('weight-edit');
     if (weightEdit) weightEdit.onclick = () => {
       haptic();
@@ -259,14 +247,13 @@ function renderHoy() {
         state.profile.imc = state.weight / ((state.profile.height / 100) ** 2);
         if (!state.profile.weightHistory) state.profile.weightHistory = [];
         state.profile.weightHistory.push({ date: new Date().toISOString().slice(0, 10), kg: state.weight });
-        saveState(); safeRender(); toast('✅ Peso actualizado');
+        saveState(); render(); toast('✅ Peso actualizado');
       }
     };
   }, 50);
   return wrap;
 }
 
-/* ------------------------- Modal / Toast / Haptic ------------------------- */
 function showConfirm(title, message, onConfirm) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:1000;display:grid;place-items:center;padding:24px;opacity:0;transition:opacity .2s';
@@ -292,26 +279,15 @@ function toast(message) {
 
 function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
 
-/* ------------------------- Render con LOCK ------------------------- */
-function safeRender() {
-  if (RENDER_LOCK) return;
-  RENDER_LOCK = true;
-  try {
-    render();
-  } catch (e) {
-    console.error('Error en render:', e);
-  }
-  setTimeout(() => { RENDER_LOCK = false; }, 100);
-}
-
+/* ------------------------- Render Principal ------------------------- */
 function render() {
   const root = document.getElementById('app-root');
   if (!root) return;
 
-  // Si no está onboardeado, delegar al onboarding
+  // Si no está onboardeado, NO renderizar acá. El onboarding se encarga.
   if (!state.profile.onboarded) {
     if (window.SomaAiOnboarding && window.SomaAiOnboarding.render) {
-      try { window.SomaAiOnboarding.render(); } catch (e) { console.error('Error onboarding:', e); }
+      window.SomaAiOnboarding.render();
     }
     return;
   }
@@ -326,27 +302,21 @@ function render() {
   main.style.cssText = 'padding-top:16px;padding-bottom:100px;overflow-y:auto;height:calc(100dvh - 65px)';
   const container = el('div', { class: 'container' });
 
-  try {
-    if (state.currentTab === 'hoy') {
-      if (state.loadingDB) container.innerHTML = renderSkeleton();
-      else if (state.dbError) {
-        container.innerHTML = '<div class="card card-pad" style="text-align:center;padding:40px 20px"><div style="font-size:48px">⚠️</div><div class="h2" style="margin-top:16px">Error al cargar</div><div class="muted" style="font-size:13px;margin-top:8px">No se pudieron cargar las bases de datos.</div><button class="btn btn-primary" id="retry-db" style="margin-top:20px">Reintentar</button></div>';
-        setTimeout(() => { const r = document.getElementById('retry-db'); if (r) r.onclick = retryLoadDB; }, 50);
-      } else {
-        container.appendChild(renderHoy());
-      }
-    } else if (state.currentTab === 'buscar' && window.SomaAiSearch) {
-      container.appendChild(window.SomaAiSearch.render());
-    } else if (state.currentTab === 'camara' && window.SomaAiCamera) {
-      container.appendChild(window.SomaAiCamera.render());
-    } else if (state.currentTab === 'perfil' && window.SomaAiProfile) {
-      container.appendChild(window.SomaAiProfile.render());
+  if (state.currentTab === 'hoy') {
+    if (state.loadingDB) container.innerHTML = renderSkeleton();
+    else if (state.dbError) {
+      container.innerHTML = '<div class="card card-pad" style="text-align:center;padding:40px 20px"><div style="font-size:48px">⚠️</div><div class="h2" style="margin-top:16px">Error al cargar</div><div class="muted" style="font-size:13px;margin-top:8px">No se pudieron cargar las bases de datos.</div><button class="btn btn-primary" id="retry-db" style="margin-top:20px">Reintentar</button></div>';
+      setTimeout(() => { const r = document.getElementById('retry-db'); if (r) r.onclick = () => { state.foodsLoaded = false; state.dbError = false; state.loadingDB = false; loadAllDatabases().then(render); }; }, 50);
+    } else {
+      container.appendChild(renderHoy());
     }
-  } catch (e) {
-    console.error('Error renderizando pestaña:', e);
-    container.innerHTML = '<div class="card card-pad" style="text-align:center;padding:40px 20px"><div style="font-size:48px">⚠️</div><div class="h2" style="margin-top:16px">Error al cargar pestaña</div><div class="muted" style="font-size:13px;margin-top:8px">' + e.message + '</div></div>';
+  } else if (state.currentTab === 'buscar' && window.SomaAiSearch) {
+    container.appendChild(window.SomaAiSearch.render());
+  } else if (state.currentTab === 'camara' && window.SomaAiCamera) {
+    container.appendChild(window.SomaAiCamera.render());
+  } else if (state.currentTab === 'perfil' && window.SomaAiProfile) {
+    container.appendChild(window.SomaAiProfile.render());
   }
-
   main.appendChild(container); app.appendChild(main);
 
   const nav = el('nav');
@@ -362,49 +332,52 @@ function render() {
     const btn = el('button');
     btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px;border-radius:12px;min-width:60px;transition:all .2s' + (isActive ? ';background:rgba(0,255,136,.1)' : '');
     btn.innerHTML = '<span style="font-size:20px' + (isActive ? ';transform:scale(1.1)' : '') + '">' + tab.icon + '</span><span style="font-size:10px;font-weight:700;color:' + (isActive ? 'var(--green)' : 'var(--muted)') + '">' + tab.label + '</span>';
-    btn.onclick = () => { haptic(); state.currentTab = tab.id; safeRender(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    btn.onclick = () => { haptic(); state.currentTab = tab.id; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     navRow.appendChild(btn);
   });
   nav.appendChild(navRow); app.appendChild(nav); root.appendChild(app);
 
   const headerPerfil = document.getElementById('header-perfil');
-  if (headerPerfil) headerPerfil.onclick = () => { haptic(); state.currentTab = 'perfil'; safeRender(); };
+  if (headerPerfil) headerPerfil.onclick = () => { haptic(); state.currentTab = 'perfil'; render(); };
 }
 
-/* ------------------------- Init ------------------------- */
 window.SomaAi = {
   state, saveState, loadState, loadAllDatabases,
-  calcTargets, calcTotals, el, render, renderHoy, safeRender,
+  calcTargets, calcTotals, el, render, renderHoy,
   toast, haptic, escapeHtml, showConfirm,
 };
 
 window.SomaAiReady = false;
+window.SomaAiOnboardingLoaded = false;
 
 async function init() {
   try {
     loadState();
     window.SomaAiReady = true;
-    if (!state.profile.onboarded) {
-      // Esperar a que onboarding esté listo
+    // Cargar bases en background (sin render)
+    loadAllDatabases();
+    // Si ya está onboardeado, renderizar directamente
+    if (state.profile.onboarded) {
+      render();
+    }
+    // Si NO está onboardeado, esperar a que onboarding.js se cargue
+    else {
       let tries = 0;
       const waitOnboarding = setInterval(() => {
         tries++;
         if (window.SomaAiOnboarding && window.SomaAiOnboarding.render) {
           clearInterval(waitOnboarding);
+          window.SomaAiOnboardingLoaded = true;
           try {
             window.SomaAiOnboarding.loadConfig().then(() => {
               window.SomaAiOnboarding.render();
             });
-          } catch (e) { console.error(e); }
-          loadAllDatabases();
-        } else if (tries > 50) {
+          } catch (e) { console.error('Error onboarding:', e); }
+        } else if (tries > 100) {
           clearInterval(waitOnboarding);
           console.error('Onboarding nunca cargó');
         }
       }, 50);
-    } else {
-      safeRender();
-      loadAllDatabases();
     }
   } catch (e) { console.error('Error init:', e); }
 }

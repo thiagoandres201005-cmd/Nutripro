@@ -6,31 +6,9 @@
   <meta name="theme-color" content="#0a0a0b">
   <title>SomaAi</title>
   <link rel="stylesheet" href="./core.css">
-  <style>
-    body { background: #0a0a0b; color: #fff; font-family: monospace; padding: 20px; }
-    #diag { position:fixed;top:0;left:0;right:0;background:#001a00;color:#0f0;padding:12px;font-size:11px;z-index:9999;font-family:monospace;max-height:60vh;overflow:auto;border-bottom:2px solid #0f0; }
-  </style>
 </head>
 <body>
   <div id="app-root"></div>
-  <div id="diag">[DIAG] Iniciando...<br></div>
-  <script>
-    window.addEventListener('error', function(e) {
-      document.getElementById('diag').innerHTML += '[ERROR] ' + e.message + ' @ ' + e.filename + ':' + e.lineno + '<br>';
-    });
-    window.addEventListener('unhandledrejection', function(e) {
-      document.getElementById('diag').innerHTML += '[PROMISE] ' + (e.reason && e.reason.message ? e.reason.message : e.reason) + '<br>';
-    });
-    setTimeout(function() {
-      var d = document.getElementById('diag');
-      d.innerHTML += '[DIAG] SomaAi cargado: ' + (window.SomaAi ? 'SI' : 'NO') + '<br>';
-      d.innerHTML += '[DIAG] Onboarding cargado: ' + (window.SomaAiOnboarding ? 'SI' : 'NO') + '<br>';
-      d.innerHTML += '[DIAG] app-root existe: ' + (document.getElementById('app-root') ? 'SI' : 'NO') + '<br>';
-      d.innerHTML += '[DIAG] app-root tiene hijos: ' + (document.getElementById('app-root').children.length) + '<br>';
-      d.innerHTML += '[DIAG] CSS cargado: ' + (document.querySelector('link[rel="stylesheet"]') ? 'SI' : 'NO') + '<br>';
-      d.innerHTML += '[DIAG] Body background: ' + getComputedStyle(document.body).backgroundColor + '<br>';
-    }, 3000);
-  </script>
   <script type="module" src="./core.js"></script>
   <script type="module" src="./onboarding.js"></script>
   <script type="module" src="./search.js"></script>
