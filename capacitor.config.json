@@ -17,6 +17,18 @@
     "StatusBar": {
       "style": "Dark",
       "backgroundColor": "#0a0a0b"
+    },
+    "Camera": {
+      "permissions": ["camera"]
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#00ff88",
+      "sound": "beep.wav"
+    },
+    "BarcodeScanner": {
+      "supportedFormats": ["EAN_13", "EAN_8", "UPC_A", "UPC_E", "CODE_128", "CODE_39", "QR_CODE"],
+      "detectionThreshold": 0.5
     }
   },
   "android": {
