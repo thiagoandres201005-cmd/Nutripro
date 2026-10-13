@@ -1,9 +1,9 @@
 /* ============================================================================
-   SomaAi v1.5 — Núcleo con pestaña Cámara
+   SomaAi v1.6 — Núcleo con el() a prueba de balas
    ========================================================================== */
 
 const state = {
-  version: '1.5.0',
+  version: '1.6.0',
   platform: 'web',
   date: new Date().toISOString().slice(0, 10),
   water: 0,
@@ -168,28 +168,40 @@ function calcTotals(entries) {
   return { kcal: Math.round(t.kcal), p: Math.round(t.p), c: Math.round(t.c), f: Math.round(t.f) };
 }
 
-/* ------------------------- DOM Helpers ------------------------- */
+/* ------------------------- DOM Helpers (A PRUEBA DE BALAS) ------------------------- */
 function el(tag, props, children) {
   const node = document.createElement(tag);
   if (props) {
     Object.keys(props).forEach((k) => {
-      if (k === 'style' && typeof props[k] === 'object') Object.assign(node.style, props[k]);
-      else if (k === 'class') node.className = props[k];
-      else if (k.startsWith('on') && typeof props[k] === 'function') node.addEventListener(k.slice(2).toLowerCase(), props[k]);
-      else if (k === 'html') node.innerHTML = props[k];
-      else if (k === 'text') node.textContent = props[k];
-      else node.setAttribute(k, props[k]);
+      try {
+        if (k === 'style' && typeof props[k] === 'object') Object.assign(node.style, props[k]);
+        else if (k === 'class') node.className = props[k];
+        else if (k.startsWith('on') && typeof props[k] === 'function') node.addEventListener(k.slice(2).toLowerCase(), props[k]);
+        else if (k === 'html') node.innerHTML = props[k];
+        else if (k === 'text') node.textContent = props[k];
+        else node.setAttribute(k, props[k]);
+      } catch (e) {}
     });
   }
-  (Array.isArray(children) ? children : [children]).forEach((c) => {
-    if (c == null) return;
-    node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  const childArray = Array.isArray(children) ? children : [children];
+  childArray.forEach((c) => {
+    if (c == null || c === false || c === true) return; // Ignorar null, undefined, false, true
+    if (typeof c === 'string') {
+      node.appendChild(document.createTextNode(c));
+    } else if (typeof c === 'number') {
+      node.appendChild(document.createTextNode(String(c)));
+    } else if (c instanceof Node) {
+      node.appendChild(c);
+    } else {
+      // Último recurso: convertir a string
+      try { node.appendChild(document.createTextNode(String(c))); } catch (e) {}
+    }
   });
   return node;
 }
 
 function ring(value, goal, label, color1, color2) {
-  const pct = Math.min(100, Math.round((value / (goal || 1)) * 100));
+  const pct = Math.min(100, Math.round(((value || 0) / (goal || 1)) * 100));
   const R = 42;
   const CIRC = 2 * Math.PI * R;
   const off = CIRC * (1 - pct / 100);
@@ -202,7 +214,7 @@ function ring(value, goal, label, color1, color2) {
     '</svg>' +
     '<div style="position:absolute;inset:0;display:grid;place-items:center">' +
       '<div style="text-align:center">' +
-        '<div class="mono" style="font-size:16px;font-weight:800">' + value + '</div>' +
+        '<div class="mono" style="font-size:16px;font-weight:800">' + (value || 0) + '</div>' +
         '<div class="muted2" style="font-size:9px;text-transform:uppercase">' + label + '</div>' +
       '</div>' +
     '</div>';
@@ -212,7 +224,7 @@ function ring(value, goal, label, color1, color2) {
 function miniStat(label, value, color) {
   return '<div style="padding:10px;border-radius:12px;background:var(--surface);border:1px solid var(--border);text-align:center">' +
     '<div class="muted2" style="font-size:10px;text-transform:uppercase">' + label + '</div>' +
-    '<div class="mono" style="font-size:14px;font-weight:800;color:' + color + ';margin-top:4px">' + value + '</div>' +
+    '<div class="mono" style="font-size:14px;font-weight:800;color:' + color + ';margin-top:4px">' + (value || '0') + '</div>' +
   '</div>';
 }
 
@@ -356,10 +368,10 @@ function renderHoy() {
 
   const weightCard = el('div', { class: 'card card-pad' });
   weightCard.innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center"><div class="eyebrow">⚖️ Peso</div><span class="pill green" style="font-size:10px">IMC ' + (state.profile.imc || 0).toFixed(1) + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center"><div class="eyebrow">⚖️ Peso</div><span class="pill green" style="font-size:10px">IMC ' + (Number(state.profile.imc) || 0).toFixed(1) + '</span></div>' +
     '<div style="margin-top:10px;text-align:center;padding:16px 0">' +
       '<div class="mono" style="font-size:32px;font-weight:800">' + (Number(state.weight) || 72.4).toFixed(1) + '<span class="muted" style="font-size:14px;font-weight:600"> kg</span></div>' +
-      '<div class="muted2" style="font-size:11px;margin-top:4px">' + ((state.profile.imc || 0) < 18.5 ? 'Bajo peso' : (state.profile.imc || 0) < 25 ? 'Normal' : (state.profile.imc || 0) < 30 ? 'Sobrepeso' : 'Obesidad') + '</div>' +
+      '<div class="muted2" style="font-size:11px;margin-top:4px">' + ((Number(state.profile.imc) || 0) < 18.5 ? 'Bajo peso' : (Number(state.profile.imc) || 0) < 25 ? 'Normal' : (Number(state.profile.imc) || 0) < 30 ? 'Sobrepeso' : 'Obesidad') + '</div>' +
     '</div>' +
     '<button class="btn btn-ghost btn-sm" id="weight-edit" style="width:100%">✎ Actualizar peso</button>';
   row.appendChild(weightCard);
@@ -391,7 +403,7 @@ function renderHoy() {
   return wrap;
 }
 
-/* ------------------------- Modal de Confirmación ------------------------- */
+/* ------------------------- Modal / Toast / Haptic ------------------------- */
 function showConfirm(title, message, onConfirm) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:1000;display:grid;place-items:center;padding:24px;opacity:0;transition:opacity .2s';
@@ -430,14 +442,17 @@ function render() {
   if (!root) return;
 
   if (!state.profile.onboarded && window.SomaAiOnboarding) {
-    window.SomaAiOnboarding.render();
+    try {
+      window.SomaAiOnboarding.render();
+    } catch (e) {
+      root.innerHTML = '<div style="padding:20px;color:#fff;font-family:monospace;font-size:12px">Error en onboarding: ' + e.message + '</div>';
+    }
     return;
   }
 
   root.innerHTML = '';
   const app = el('div', { class: 'app' });
 
-  // Header
   const header = el('header', { class: 'top' });
   header.innerHTML =
     '<div class="grad-line"></div>' +
@@ -447,7 +462,6 @@ function render() {
     '</div></div>';
   app.appendChild(header);
 
-  // Contenido principal
   const main = el('main');
   main.style.cssText = 'padding-top:16px;padding-bottom:100px;overflow-y:auto;height:calc(100dvh - 65px)';
   const container = el('div', { class: 'container' });
@@ -476,7 +490,6 @@ function render() {
   main.appendChild(container);
   app.appendChild(main);
 
-  // Menú inferior con 4 pestañas
   const nav = el('nav');
   nav.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,11,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding-bottom:var(--safe-bottom);z-index:50';
   const tabs = [
@@ -515,8 +528,12 @@ window.SomaAi = {
 async function init() {
   loadState();
   if (!state.profile.onboarded && window.SomaAiOnboarding) {
-    await window.SomaAiOnboarding.loadConfig();
-    window.SomaAiOnboarding.render();
+    try {
+      await window.SomaAiOnboarding.loadConfig();
+      window.SomaAiOnboarding.render();
+    } catch (e) {
+      document.getElementById('app-root').innerHTML = '<div style="padding:20px;color:#fff;font-family:monospace;font-size:12px">Error en onboarding init: ' + e.message + '</div>';
+    }
     loadAllDatabases();
     return;
   }
