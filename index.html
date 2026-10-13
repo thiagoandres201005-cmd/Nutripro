@@ -8,7 +8,28 @@
   <link rel="stylesheet" href="./core.css">
 </head>
 <body>
+  <div id="splash-screen" class="splash">
+    <div style="text-align:center">
+      <div class="splash-logo">S</div>
+      <div class="splash-text">
+        <div class="name">SomaAi</div>
+        <div class="sub">NUTRICIÓN INTELIGENTE</div>
+      </div>
+    </div>
+  </div>
   <div id="app-root"></div>
+  <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        var splash = document.getElementById('splash-screen');
+        if (splash) {
+          splash.style.transition = 'opacity 0.5s ease';
+          splash.style.opacity = '0';
+          setTimeout(function() { splash.remove(); }, 500);
+        }
+      }, 1500);
+    });
+  </script>
   <script type="module" src="./core.js"></script>
   <script type="module" src="./onboarding.js"></script>
   <script type="module" src="./search.js"></script>
