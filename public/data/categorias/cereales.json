@@ -1,0 +1,16 @@
+{
+  "category": "cereales",
+  "label": "Cereales",
+  "foods": [
+    { "id": "cereal_arroz_blanco", "name": "Arroz blanco cocido", "emoji": "🍚", "kcal": 130, "p": 2.7, "c": 28, "f": 0.3, "fib": 0.4 },
+    { "id": "cereal_arroz_integral", "name": "Arroz integral cocido", "emoji": "🍚", "kcal": 112, "p": 2.6, "c": 23, "f": 0.9, "fib": 1.8 },
+    { "id": "cereal_avena", "name": "Avena", "emoji": "🌾", "kcal": 389, "p": 16.9, "c": 66, "f": 6.9, "fib": 10.6 },
+    { "id": "cereal_pan_blanco", "name": "Pan blanco", "emoji": "🍞", "kcal": 265, "p": 9, "c": 49, "f": 3.2, "fib": 2.7 },
+    { "id": "cereal_pan_integral", "name": "Pan integral", "emoji": "🍞", "kcal": 247, "p": 13, "c": 41, "f": 4.2, "fib": 6 },
+    { "id": "cereal_fideos", "name": "Fideos cocidos", "emoji": "🍝", "kcal": 158, "p": 5.8, "c": 31, "f": 0.9, "fib": 1.8 },
+    { "id": "cereal_quinoa", "name": "Quinoa cocida", "emoji": "🌾", "kcal": 120, "p": 4.4, "c": 21, "f": 1.9, "fib": 2.8 },
+    { "id": "cereal_copos_maiz", "name": "Copos de maíz", "emoji": "🥣", "kcal": 357, "p": 7, "c": 84, "f": 0.4, "fib": 3 },
+    { "id": "cereal_granola", "name": "Granola", "emoji": "🥣", "kcal": 471, "p": 10, "c": 64, "f": 20, "fib": 7 },
+    { "id": "cereal_tortillas", "name": "Tortillas de trigo", "emoji": "🌮", "kcal": 300, "p": 8, "c": 50, "f": 7 }
+  ]
+}

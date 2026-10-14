@@ -1,0 +1,16 @@
+{
+  "category": "pescados",
+  "label": "Pescados",
+  "foods": [
+    { "id": "pesc_atun", "name": "Atún al natural", "emoji": "🐟", "kcal": 116, "p": 26, "c": 0, "f": 1 },
+    { "id": "pesc_atun_aceite", "name": "Atún en aceite", "emoji": "🐟", "kcal": 198, "p": 25, "c": 0, "f": 10 },
+    { "id": "pesc_salmon", "name": "Salmón", "emoji": "🐟", "kcal": 208, "p": 20, "c": 0, "f": 13 },
+    { "id": "pesc_merluza", "name": "Merluza", "emoji": "🐟", "kcal": 90, "p": 18, "c": 0, "f": 1.3 },
+    { "id": "pesc_camaron", "name": "Camarones", "emoji": "🦐", "kcal": 85, "p": 20, "c": 0.2, "f": 0.5 },
+    { "id": "pesc_calamar", "name": "Calamar", "emoji": "🦑", "kcal": 92, "p": 15.6, "c": 3.1, "f": 1.4 },
+    { "id": "pesc_sardina", "name": "Sardinas en lata", "emoji": "🐟", "kcal": 208, "p": 25, "c": 0, "f": 11 },
+    { "id": "pesc_trucha", "name": "Trucha", "emoji": "🐟", "kcal": 148, "p": 21, "c": 0, "f": 6.6 },
+    { "id": "pesc_pulpo", "name": "Pulpo", "emoji": "🐙", "kcal": 82, "p": 15, "c": 2.2, "f": 1 },
+    { "id": "pesc_mejillones", "name": "Mejillones", "emoji": "🦪", "kcal": 86, "p": 12, "c": 3.7, "f": 2.2 }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "category": "carnes",
+  "label": "Carnes",
+  "foods": [
+    { "id": "carne_asado", "name": "Asado de tira", "emoji": "🥩", "kcal": 280, "p": 26, "c": 0, "f": 19 },
+    { "id": "carne_vacio", "name": "Vacío", "emoji": "🥩", "kcal": 260, "p": 26, "c": 0, "f": 17 },
+    { "id": "carne_bife", "name": "Bife de chorizo", "emoji": "🥩", "kcal": 270, "p": 25, "c": 0, "f": 18 },
+    { "id": "carne_milanesa", "name": "Milanesa de carne", "emoji": "🍖", "kcal": 300, "p": 24, "c": 12, "f": 17 },
+    { "id": "carne_pollo_pechuga", "name": "Pechuga de pollo", "emoji": "🍗", "kcal": 165, "p": 31, "c": 0, "f": 3.6 },
+    { "id": "carne_pollo_muslo", "name": "Muslo de pollo", "emoji": "🍗", "kcal": 209, "p": 26, "c": 0, "f": 11 },
+    { "id": "carne_cerdo_bondiola", "name": "Bondiola de cerdo", "emoji": "🥩", "kcal": 280, "p": 24, "c": 0, "f": 20 },
+    { "id": "carne_cerdo_chuleta", "name": "Chuleta de cerdo", "emoji": "🥩", "kcal": 250, "p": 26, "c": 0, "f": 16 },
+    { "id": "carne_pavo", "name": "Pechuga de pavo", "emoji": "🦃", "kcal": 135, "p": 30, "c": 0, "f": 1 },
+    { "id": "carne_huevo", "name": "Huevo entero", "emoji": "🥚", "kcal": 155, "p": 13, "c": 1.1, "f": 11 },
+    { "id": "carne_huevo_clara", "name": "Clara de huevo", "emoji": "🥚", "kcal": 52, "p": 11, "c": 0.7, "f": 0.2 },
+    { "id": "carne_chorizo", "name": "Chorizo", "emoji": "🌭", "kcal": 300, "p": 15, "c": 2, "f": 26 },
+    { "id": "carne_hamburguesa", "name": "Hamburguesa casera", "emoji": "🍔", "kcal": 250, "p": 20, "c": 5, "f": 17 },
+    { "id": "carne_morcilla", "name": "Morcilla", "emoji": "🩸", "kcal": 320, "p": 15, "c": 3, "f": 28 },
+    { "id": "carne_salchicha", "name": "Salchicha", "emoji": "🌭", "kcal": 290, "p": 12, "c": 2, "f": 26 }
+  ]
+}

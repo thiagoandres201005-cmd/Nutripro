@@ -1,0 +1,16 @@
+{
+  "category": "snacks",
+  "label": "Snacks",
+  "foods": [
+    { "id": "snack_papas_fritas", "name": "Papas fritas", "emoji": "🍟", "kcal": 536, "p": 7, "c": 53, "f": 34 },
+    { "id": "snack_mani", "name": "Maní salado", "emoji": "🥜", "kcal": 567, "p": 26, "c": 16, "f": 49 },
+    { "id": "snack_almendras", "name": "Almendras", "emoji": "🌰", "kcal": 579, "p": 21, "c": 22, "f": 50 },
+    { "id": "snack_nueces", "name": "Nueces", "emoji": "🌰", "kcal": 654, "p": 15, "c": 14, "f": 65 },
+    { "id": "snack_galletitas_dulces", "name": "Galletitas dulces", "emoji": "🍪", "kcal": 470, "p": 6, "c": 68, "f": 19 },
+    { "id": "snack_galletitas_saladas", "name": "Galletitas saladas", "emoji": "🍘", "kcal": 430, "p": 9, "c": 68, "f": 13 },
+    { "id": "snack_alfajor", "name": "Alfajor de chocolate", "emoji": "🍫", "kcal": 450, "p": 5, "c": 65, "f": 19 },
+    { "id": "snack_chocolate", "name": "Chocolate con leche", "emoji": "🍫", "kcal": 535, "p": 7.6, "c": 59, "f": 30 },
+    { "id": "snack_barrita", "name": "Barrita de cereal", "emoji": "🍫", "kcal": 400, "p": 6, "c": 68, "f": 11 },
+    { "id": "snack_pringles", "name": "Pringles", "emoji": "🥔", "kcal": 536, "p": 4, "c": 53, "f": 34, "brand": "Pringles" }
+  ]
+}
