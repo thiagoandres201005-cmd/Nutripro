@@ -840,3 +840,40 @@ main::-webkit-scrollbar { width: 0; }
 .card.card-pad.sticky-search {
   overflow: visible !important;
 }
+
+/* ============ BOTONES DE ACCIÓN RÁPIDA ============ */
+.quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.quick-action { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s ease; color: var(--text); font-size: 10px; font-weight: 700; text-align: center; }
+.quick-action:active { transform: scale(0.95); background: var(--card2); }
+.quick-action-icon { font-size: 22px; }
+.quick-action-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+
+/* ============ LOGROS ============ */
+.achievements-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.achievement { padding: 12px 6px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); text-align: center; opacity: 0.4; transition: all 0.2s ease; }
+.achievement.unlocked { opacity: 1; border-color: rgba(0, 255, 136, 0.3); background: linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(6, 182, 212, 0.04)); box-shadow: 0 0 20px rgba(0, 255, 136, 0.15); }
+.achievement-icon { font-size: 24px; filter: grayscale(1); }
+.achievement.unlocked .achievement-icon { filter: grayscale(0); }
+.achievement-label { font-size: 9px; font-weight: 700; margin-top: 6px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.03em; }
+.achievement.unlocked .achievement-label { color: var(--green); }
+
+/* ============ FAVORITOS ============ */
+.fav-btn { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: transparent; border: none; cursor: pointer; font-size: 16px; transition: transform 0.15s ease; }
+.fav-btn:active { transform: scale(0.85); }
+.fav-btn.active { color: var(--amber); }
+
+/* ============ BÚSQUEDA POR VOZ ============ */
+.mic-btn { position: absolute; right: 50px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: var(--card2); border: 1px solid var(--border); display: grid; place-items: center; font-size: 14px; cursor: pointer; transition: all 0.15s ease; }
+.mic-btn:active { transform: translateY(-50%) scale(0.9); }
+.mic-btn.listening { background: var(--red); color: white; animation: pulse 1s infinite; }
+
+/* ============ ESTADÍSTICAS SEMANALES ============ */
+.week-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-top: 12px; padding: 8px 0 20px 0; }
+.week-bar { flex: 1; background: linear-gradient(180deg, var(--green), var(--cyan)); border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.5s ease; position: relative; }
+.week-bar-label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--muted2); font-weight: 700; }
+.week-bar.today { background: linear-gradient(180deg, var(--amber), var(--pink)); box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
+
+/* ============ MODO CLARO ============ */
+body.light-theme { --bg: #f5f5f7; --card: #ffffff; --card2: #f0f0f3; --surface: #fafafa; --border: rgba(0, 0, 0, 0.08); --border2: rgba(0, 0, 0, 0.14); --text: #0a0a0b; --muted: #6b7280; --muted2: #9ca3af; }
+body.light-theme header.top { background: rgba(255, 255, 255, 0.85); }
+body.light-theme nav { background: rgba(255, 255, 255, 0.95) !important; }
