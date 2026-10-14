@@ -1,9 +1,9 @@
 /* ============================================================================
-   SomaAi v2.0 — Núcleo limpio sin carreras
+   SomaAi v2.1 — Núcleo con fixes de loading y navegación
    ========================================================================== */
 
 const state = {
-  version: '2.0.0',
+  version: '2.1.0',
   platform: 'web',
   date: new Date().toISOString().slice(0, 10),
   water: 0,
@@ -21,7 +21,6 @@ const state = {
   currentTab: 'hoy',
   loadingDB: false,
   dbError: false,
-  appReady: false,
 };
 
 function saveState() {
@@ -85,6 +84,7 @@ async function loadAllDatabases() {
   if (allFoods.length === 0) {
     state.dbError = true;
     state.loadingDB = false;
+    if (window.SomaAiRender) window.SomaAiRender();
     return;
   }
   if (state.customFoods && state.customFoods.length) allFoods.push(...state.customFoods);
@@ -92,6 +92,10 @@ async function loadAllDatabases() {
   state.foodsCount = allFoods.length;
   state.foodsLoaded = true;
   state.loadingDB = false;
+  // Solo renderizar si estamos en Hoy
+  if (state.currentTab === 'hoy' && window.SomaAiRender) window.SomaAiRender();
+  // Notificar al search
+  if (window.SomaAiSearch && window.SomaAiSearch.onDataLoaded) window.SomaAiSearch.onDataLoaded();
 }
 
 function calcTargets(profile) {
@@ -279,15 +283,13 @@ function toast(message) {
 
 function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
 
-/* ------------------------- Render Principal ------------------------- */
 function render() {
   const root = document.getElementById('app-root');
   if (!root) return;
 
-  // Si no está onboardeado, NO renderizar acá. El onboarding se encarga.
   if (!state.profile.onboarded) {
     if (window.SomaAiOnboarding && window.SomaAiOnboarding.render) {
-      window.SomaAiOnboarding.render();
+      try { window.SomaAiOnboarding.render(); } catch (e) { console.error('Error onboarding:', e); }
     }
     return;
   }
@@ -302,21 +304,29 @@ function render() {
   main.style.cssText = 'padding-top:16px;padding-bottom:100px;overflow-y:auto;height:calc(100dvh - 65px)';
   const container = el('div', { class: 'container' });
 
-  if (state.currentTab === 'hoy') {
-    if (state.loadingDB) container.innerHTML = renderSkeleton();
-    else if (state.dbError) {
-      container.innerHTML = '<div class="card card-pad" style="text-align:center;padding:40px 20px"><div style="font-size:48px">⚠️</div><div class="h2" style="margin-top:16px">Error al cargar</div><div class="muted" style="font-size:13px;margin-top:8px">No se pudieron cargar las bases de datos.</div><button class="btn btn-primary" id="retry-db" style="margin-top:20px">Reintentar</button></div>';
-      setTimeout(() => { const r = document.getElementById('retry-db'); if (r) r.onclick = () => { state.foodsLoaded = false; state.dbError = false; state.loadingDB = false; loadAllDatabases().then(render); }; }, 50);
-    } else {
-      container.appendChild(renderHoy());
+  try {
+    if (state.currentTab === 'hoy') {
+      // Mostrar skeleton SOLO si no cargó Y no hay error
+      if (!state.foodsLoaded && !state.dbError) {
+        container.innerHTML = renderSkeleton();
+      } else if (state.dbError && !state.foodsLoaded) {
+        container.innerHTML = '<div class="card card-pad" style="text-align:center;padding:40px 20px"><div style="font-size:48px">⚠️</div><div class="h2" style="margin-top:16px">Error al cargar</div><div class="muted" style="font-size:13px;margin-top:8px">No se pudieron cargar las bases de datos.</div><button class="btn btn-primary" id="retry-db" style="margin-top:20px">Reintentar</button></div>';
+        setTimeout(() => { const r = document.getElementById('retry-db'); if (r) r.onclick = () => { state.foodsLoaded = false; state.dbError = false; state.loadingDB = false; loadAllDatabases(); }; }, 50);
+      } else {
+        container.appendChild(renderHoy());
+      }
+    } else if (state.currentTab === 'buscar' && window.SomaAiSearch) {
+      container.appendChild(window.SomaAiSearch.render());
+    } else if (state.currentTab === 'camara' && window.SomaAiCamera) {
+      container.appendChild(window.SomaAiCamera.render());
+    } else if (state.currentTab === 'perfil' && window.SomaAiProfile) {
+      container.appendChild(window.SomaAiProfile.render());
     }
-  } else if (state.currentTab === 'buscar' && window.SomaAiSearch) {
-    container.appendChild(window.SomaAiSearch.render());
-  } else if (state.currentTab === 'camara' && window.SomaAiCamera) {
-    container.appendChild(window.SomaAiCamera.render());
-  } else if (state.currentTab === 'perfil' && window.SomaAiProfile) {
-    container.appendChild(window.SomaAiProfile.render());
+  } catch (e) {
+    console.error('Error renderizando pestaña:', e);
+    container.innerHTML = '<div class="card card-pad" style="text-align:center;padding:40px 20px"><div style="font-size:48px">⚠️</div><div class="h2" style="margin-top:16px">Error al cargar pestaña</div><div class="muted" style="font-size:13px;margin-top:8px">' + e.message + '</div></div>';
   }
+
   main.appendChild(container); app.appendChild(main);
 
   const nav = el('nav');
@@ -341,6 +351,8 @@ function render() {
   if (headerPerfil) headerPerfil.onclick = () => { haptic(); state.currentTab = 'perfil'; render(); };
 }
 
+window.SomaAiRender = render;
+
 window.SomaAi = {
   state, saveState, loadState, loadAllDatabases,
   calcTargets, calcTotals, el, render, renderHoy,
@@ -354,14 +366,11 @@ async function init() {
   try {
     loadState();
     window.SomaAiReady = true;
-    // Cargar bases en background (sin render)
+    // Cargar bases en background
     loadAllDatabases();
-    // Si ya está onboardeado, renderizar directamente
     if (state.profile.onboarded) {
       render();
-    }
-    // Si NO está onboardeado, esperar a que onboarding.js se cargue
-    else {
+    } else {
       let tries = 0;
       const waitOnboarding = setInterval(() => {
         tries++;

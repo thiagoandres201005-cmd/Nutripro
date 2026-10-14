@@ -808,3 +808,35 @@ main::-webkit-scrollbar { width: 0; }
 .ring svg circle {
   transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ============ FIX CHIPS DE FILTROS ============ */
+.card .chips-container {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 0;
+  margin: 0 -4px;
+}
+.card .chips-container::-webkit-scrollbar {
+  display: none;
+}
+.chip-btn {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  min-width: fit-content !important;
+  max-width: none !important;
+}
+
+/* Fix general: los cards NO deben tener overflow hidden */
+.card {
+  overflow: visible !important;
+}
+.card-pad {
+  overflow: visible !important;
+}
+
+/* Solo el card de búsqueda mantiene el sticky */
+.card.card-pad.sticky-search {
+  overflow: visible !important;
+}
