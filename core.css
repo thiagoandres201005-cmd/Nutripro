@@ -932,3 +932,82 @@ img { max-width: 100%; height: auto; }
 .profile-avatar-inner { width: 100%; height: 100%; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 48px; overflow: hidden; position: relative; }
 .profile-avatar-inner img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .profile-avatar-edit { position: absolute; bottom: 2px; right: 2px; width: 32px; height: 32px; border-radius: 50%; background: var(--green); color: #000; display: grid; place-items: center; font-size: 14px; border: 3px solid var(--card); box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4); }
+
+/* ============ FIX AJUSTE GENERAL DE PANTALLA ============ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+html, body {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  margin: 0;
+  padding: 0;
+}
+#app-root, .app {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+.container {
+  width: 100% !important;
+  max-width: 640px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+main {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+header.top, nav {
+  width: 100% !important;
+  max-width: 100vw !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+.card {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden;
+}
+.grid {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+.grid > * {
+  min-width: 0 !important;
+}
+button, input, select, textarea {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+img {
+  max-width: 100% !important;
+  height: auto;
+}
+.pill {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Tarjetas del dashboard con espaciado óptimo */
+.stack > * {
+  margin-bottom: 12px;
+}
+.stack > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Asegurar que las cards en grid de 2 columnas no se desborden */
+.grid.g-2 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.grid.g-3 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+.grid.g-4 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}

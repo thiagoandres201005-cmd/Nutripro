@@ -28,7 +28,9 @@ function renderProfile() {
 
   // ============ CARD 1: Cabecera con foto ============
   const card1 = S.el('div', { class: 'card card-pad fade-in-up' });
-  const avatarHtml = p.avatar ? '<img src="' + p.avatar + '" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />' : '<span>👤</span>';
+  const avatarHtml = p.avatar
+    ? '<img src="' + p.avatar + '" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" />'
+    : '<span>👤</span>';
   card1.innerHTML =
     '<div style="display:flex;flex-direction:column;align-items:center;gap:16px">' +
       '<div class="profile-avatar" id="avatar-btn">' +
@@ -255,23 +257,52 @@ function showAvatarOptions(S) {
 
 async function pickImage(S, source) {
   const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+  
   if (isCapacitor) {
     try {
       const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
-      const image = await Camera.getPhoto({ quality: 80, allowEditing: true, resultType: CameraResultType.Base64, source: source === 'camera' ? CameraSource.Camera : CameraSource.Photos, width: 400, height: 400 });
+      const image = await Camera.getPhoto({
+        quality: 80,
+        allowEditing: true,
+        resultType: CameraResultType.Base64,
+        source: source === 'camera' ? CameraSource.Camera : CameraSource.Photos,
+        width: 400,
+        height: 400,
+      });
       if (image.base64String) {
-        S.state.profile.avatar = 'data:image/' + image.format + ';base64,' + image.base64String;
-        S.saveState(); render(); S.toast('✅ Foto actualizada'); S.haptic('success');
+        const newAvatar = 'data:image/' + image.format + ';base64,' + image.base64String;
+        S.state.profile.avatar = newAvatar;
+        try { localStorage.setItem('somaai_state', JSON.stringify({
+          version: S.state.version, date: S.state.date, water: S.state.water,
+          weight: S.state.weight, entries: S.state.entries, profile: S.state.profile,
+          customFoods: S.state.customFoods,
+        })); } catch (e) {}
+        S.render();
+        S.toast('✅ Foto actualizada');
+        S.haptic('success');
       }
-    } catch (e) { if (e.message && !e.message.includes('cancel')) S.toast('❌ Error: ' + e.message); }
+    } catch (e) {
+      if (e.message && !e.message.includes('cancel')) S.toast('❌ Error: ' + e.message);
+    }
   } else {
     const input = document.createElement('input');
-    input.type = 'file'; input.accept = 'image/*';
+    input.type = 'file';
+    input.accept = 'image/*';
     if (source === 'camera') input.capture = 'user';
     input.onchange = (e) => {
-      const file = e.target.files[0]; if (!file) return;
+      const file = e.target.files[0];
+      if (!file) return;
       const reader = new FileReader();
-      reader.onload = (ev) => { S.state.profile.avatar = ev.target.result; S.saveState(); render(); S.toast('✅ Foto actualizada'); };
+      reader.onload = (ev) => {
+        S.state.profile.avatar = ev.target.result;
+        try { localStorage.setItem('somaai_state', JSON.stringify({
+          version: S.state.version, date: S.state.date, water: S.state.water,
+          weight: S.state.weight, entries: S.state.entries, profile: S.state.profile,
+          customFoods: S.state.customFoods,
+        })); } catch (e) {}
+        S.render();
+        S.toast('✅ Foto actualizada');
+      };
       reader.readAsDataURL(file);
     };
     input.click();
