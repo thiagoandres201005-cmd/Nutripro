@@ -389,4 +389,5 @@ function showManualAddModal(prefillName) {
 
 window.SomaAiSearch = {
   render: renderSearch,
+  showManual: showManualAddModal,
 };

@@ -267,9 +267,17 @@ function renderHoy() {
     }, 50);
   } else {
     // Estado vacío
-    const emptyCard = el('div', { class: 'card card-pad fade-in-up', style: { textAlign: 'center', padding: '40px 20px' } });
-    emptyCard.innerHTML = '<div style="font-size:64px">🍽️</div><div class="h2" style="margin-top:16px">Todavía no cargaste nada</div><div class="muted" style="font-size:13px;margin-top:8px;line-height:1.5">Tocá el botón <strong>🔍 Buscar</strong> abajo<br>o <strong>📷 Cámara</strong> para escanear un producto.</div>';
+    const emptyCard = el('div', { class: 'card card-pad fade-in-up', style: { textAlign: 'center', padding: '32px 20px' } });
+    emptyCard.innerHTML = '<div style="font-size:64px">🍽️</div><div class="h2" style="margin-top:16px">Todavía no cargaste nada</div><div class="muted" style="font-size:13px;margin-top:8px;line-height:1.5">Agregá tu primer alimento para empezar el día.</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:20px"><button class="btn btn-primary" id="empty-search" style="width:100%">🔍 Buscar alimento</button><button class="btn btn-ghost" id="empty-camera" style="width:100%">📷 Escanear con cámara</button><button class="btn btn-ghost" id="empty-manual" style="width:100%">✏️ Agregar manualmente</button></div>';
     wrap.appendChild(emptyCard);
+    setTimeout(() => {
+      const es = document.getElementById('empty-search');
+      if (es) es.onclick = () => { haptic(); state.currentTab = 'buscar'; render(); };
+      const ec = document.getElementById('empty-camera');
+      if (ec) ec.onclick = () => { haptic(); state.currentTab = 'camara'; render(); };
+      const em = document.getElementById('empty-manual');
+      if (em) em.onclick = () => { haptic(); if (window.SomaAiSearch && window.SomaAiSearch.showManual) window.SomaAiSearch.showManual(); else { state.currentTab = 'buscar'; render(); } };
+    }, 50);
   }
 
   // Card 5: Hidratación y peso

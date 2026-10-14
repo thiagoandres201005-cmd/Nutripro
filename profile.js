@@ -100,6 +100,18 @@ function renderProfile() {
   }
   wrap.appendChild(card3);
 
+  // Card Notificaciones
+  const notifCard = S.el('div', { class: 'card card-pad fade-in-up' });
+  notifCard.innerHTML =
+    '<div class="h2">🔔 Recordatorios</div>' +
+    '<div class="muted" style="font-size:12px;margin-top:4px">Activá notificaciones para mantenerte al día.</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">' +
+      '<button class="btn btn-ghost" id="notif-water" style="width:100%;justify-content:flex-start">💧 Recordatorio de agua (cada 2h)</button>' +
+      '<button class="btn btn-ghost" id="notif-meals" style="width:100%;justify-content:flex-start">🍽️ Recordatorios de comidas</button>' +
+      '<button class="btn btn-ghost" id="notif-test" style="width:100%;justify-content:flex-start">🧪 Probar notificación</button>' +
+    '</div>';
+  wrap.appendChild(notifCard);
+
   // Card 4: Datos y privacidad
   const card4 = S.el('div', { class: 'card card-pad fade-in-up' });
   card4.innerHTML =
