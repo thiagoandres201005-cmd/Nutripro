@@ -28,7 +28,7 @@ function renderProfile() {
 
   // ============ CARD 1: Cabecera con foto ============
   const card1 = S.el('div', { class: 'card card-pad fade-in-up' });
-  const avatarHtml = p.avatar ? '<img src="' + p.avatar + '" alt="avatar" />' : '<span>👤</span>';
+  const avatarHtml = p.avatar ? '<img src="' + p.avatar + '" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />' : '<span>👤</span>';
   card1.innerHTML =
     '<div style="display:flex;flex-direction:column;align-items:center;gap:16px">' +
       '<div class="profile-avatar" id="avatar-btn">' +

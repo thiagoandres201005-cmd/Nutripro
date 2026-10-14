@@ -311,15 +311,32 @@ function renderHoy() {
   // Card 5: Hidratación y peso
   const row = el('div', { class: 'grid g-2 fade-in-up', style: { gap: '12px' } });
   const waterCard = el('div', { class: 'card card-pad' });
+  const cups = Math.round(state.water / 250);
   waterCard.innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center"><div class="eyebrow">💧 Agua</div><span class="pill cyan" style="font-size:10px">' + waterPct + '%</span></div>' +
-    '<div style="margin-top:12px;position:relative;height:80px;border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--border)">' +
-      '<div style="position:absolute;left:0;right:0;bottom:0;height:' + waterPct + '%;background:linear-gradient(180deg,var(--cyan)dd,var(--cyan)66);transition:height .6s cubic-bezier(0.4,0,0.2,1)"></div>' +
-      '<div style="position:absolute;inset:0;display:grid;place-items:center"><div style="text-align:center"><div class="mono" style="font-size:20px;font-weight:800">' + state.water + '</div><div class="muted2" style="font-size:10px">de ' + targets.water + ' ml</div></div></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<div class="eyebrow">💧 Hidratación</div>' +
+      '<span class="pill cyan" style="font-size:10px">' + cups + ' vasos</span>' +
     '</div>' +
-    '<div style="display:flex;gap:6px;margin-top:10px">' +
-      [250, 500].map((ml) => '<button class="btn btn-ghost btn-sm" data-water="' + ml + '" style="flex:1;font-size:11px">+' + ml + '</button>').join('') +
-      '<button class="btn btn-ghost btn-sm" data-water-reset style="font-size:11px">↺</button>' +
+    '<div style="text-align:center;margin-top:12px">' +
+      '<div class="mono" style="font-size:36px;font-weight:800;line-height:1">' + state.water + '</div>' +
+      '<div class="muted2" style="font-size:11px;margin-top:2px">de ' + targets.water + ' ml</div>' +
+    '</div>' +
+    '<div style="margin-top:16px;position:relative;height:8px;border-radius:999px;background:var(--surface);overflow:hidden;border:1px solid var(--border)">' +
+      '<div style="position:absolute;top:0;left:0;bottom:0;width:' + waterPct + '%;background:linear-gradient(90deg,var(--cyan),var(--violet));transition:width .4s ease;border-radius:999px"></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:16px;justify-content:center">' +
+      '<button class="water-btn" data-water="250" title="+1 vaso">' +
+        '<div style="font-size:20px">💧</div>' +
+        '<div style="font-size:9px;font-weight:700;margin-top:2px">+250</div>' +
+      '</button>' +
+      '<button class="water-btn" data-water="500" title="+2 vasos">' +
+        '<div style="font-size:20px">💧</div>' +
+        '<div style="font-size:9px;font-weight:700;margin-top:2px">+500</div>' +
+      '</button>' +
+      '<button class="water-btn water-btn-reset" data-water-reset title="Reset">' +
+        '<div style="font-size:20px">↺</div>' +
+        '<div style="font-size:9px;font-weight:700;margin-top:2px">0</div>' +
+      '</button>' +
     '</div>';
   row.appendChild(waterCard);
 

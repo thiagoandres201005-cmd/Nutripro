@@ -137,10 +137,16 @@ async function startScan() {
         return;
       }
 
-      // Pedir permisos
-      const perm = await BarcodeScanner.requestPermissions();
+      let perm = await BarcodeScanner.checkPermissions();
+      if (perm.camera === 'denied' || perm.camera === 'prompt' || perm.camera === 'prompt-with-rationale') {
+        perm = await BarcodeScanner.requestPermissions();
+      }
       if (perm.camera !== 'granted' && perm.camera !== 'limited') {
-        S.toast('❌ Permiso de cámara denegado. Andá a Ajustes → Apps → SomaAi → Permisos → Cámara');
+        if (S && S.showConfirm) {
+          S.showConfirm('Permiso de cámara denegado', 'Necesitamos acceso a la cámara para escanear códigos. ¿Querés abrir los ajustes?', () => {
+            try { BarcodeScanner.openSettings(); } catch (e) {}
+          });
+        }
         return;
       }
 
