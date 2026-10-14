@@ -1,0 +1,21 @@
+{
+  "category": "golosinas",
+  "label": "Golosinas",
+  "foods": [
+    { "id": "gol_alfajor_maicena", "name": "Alfajor de maicena", "emoji": "🍪", "kcal": 420, "p": 4, "c": 65, "f": 16 },
+    { "id": "gol_alfajor_chocolate", "name": "Alfajor de chocolate", "emoji": "🍫", "kcal": 450, "p": 5, "c": 65, "f": 19 },
+    { "id": "gol_chocolate_negro", "name": "Chocolate negro 70%", "emoji": "🍫", "kcal": 598, "p": 7.8, "c": 46, "f": 43 },
+    { "id": "gol_chocolate_leche", "name": "Chocolate con leche", "emoji": "🍫", "kcal": 535, "p": 7.6, "c": 59, "f": 30 },
+    { "id": "gol_caramelos", "name": "Caramelos", "emoji": "🍬", "kcal": 394, "p": 0, "c": 98, "f": 0 },
+    { "id": "gol_chicles", "name": "Chicles sin azúcar", "emoji": "🍬", "kcal": 240, "p": 0, "c": 96, "f": 0 },
+    { "id": "gol_bombones", "name": "Bombones", "emoji": "🍫", "kcal": 500, "p": 5, "c": 55, "f": 30 },
+    { "id": "gol_medialunas", "name": "Medialunas de manteca", "emoji": "🥐", "kcal": 400, "p": 7, "c": 45, "f": 21 },
+    { "id": "gol_facturas", "name": "Facturas", "emoji": "🥐", "kcal": 380, "p": 6, "c": 50, "f": 17 },
+    { "id": "gol_helado_crema", "name": "Helado de crema", "emoji": "🍦", "kcal": 207, "p": 3.5, "c": 24, "f": 11 },
+    { "id": "gol_helado_chocolate", "name": "Helado de chocolate", "emoji": "🍦", "kcal": 216, "p": 3.8, "c": 28, "f": 11 },
+    { "id": "gol_torta_chocolate", "name": "Torta de chocolate", "emoji": "🎂", "kcal": 380, "p": 5, "c": 50, "f": 18 },
+    { "id": "gol_budin", "name": "Budín de limón", "emoji": "🍰", "kcal": 350, "p": 5, "c": 55, "f": 13 },
+    { "id": "gol_galletas_avena", "name": "Galletas de avena", "emoji": "🍪", "kcal": 450, "p": 7, "c": 65, "f": 18 },
+    { "id": "gol_garrapinada", "name": "Garrapiñada", "emoji": "🥜", "kcal": 480, "p": 10, "c": 60, "f": 22 }
+  ]
+}

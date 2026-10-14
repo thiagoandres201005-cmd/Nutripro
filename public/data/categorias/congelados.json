@@ -1,0 +1,18 @@
+{
+  "category": "congelados",
+  "label": "Congelados",
+  "foods": [
+    { "id": "cong_papas_mccain", "name": "Papas fritas congeladas", "emoji": "🍟", "kcal": 150, "p": 2.5, "c": 22, "f": 5.5, "brand": "McCain" },
+    { "id": "cong_papas_noisette", "name": "Papas noisette", "emoji": "🥔", "kcal": 180, "p": 2.5, "c": 24, "f": 8, "brand": "McCain" },
+    { "id": "cong_medallones_pollo", "name": "Medallones de pollo", "emoji": "🍗", "kcal": 220, "p": 13, "c": 15, "f": 12, "brand": "Granja del Sol" },
+    { "id": "cong_medallones_merluza", "name": "Medallones de merluza", "emoji": "🐟", "kcal": 180, "p": 12, "c": 15, "f": 8, "brand": "Granja del Sol" },
+    { "id": "cong_bastones_mozzarella", "name": "Bastones de mozzarella", "emoji": "🧀", "kcal": 280, "p": 14, "c": 22, "f": 16, "brand": "Granja del Sol" },
+    { "id": "cong_hamburguesas_paty", "name": "Hamburguesas de carne", "emoji": "🍔", "kcal": 250, "p": 16, "c": 6, "f": 18, "brand": "Paty" },
+    { "id": "cong_empanadas_congeladas", "name": "Empanadas congeladas", "emoji": "🥟", "kcal": 240, "p": 9, "c": 28, "f": 11 },
+    { "id": "cong_pizza_congelada", "name": "Pizza congelada", "emoji": "🍕", "kcal": 250, "p": 11, "c": 30, "f": 10 },
+    { "id": "cong_ñoquis", "name": "Ñoquis congelados", "emoji": "🥔", "kcal": 150, "p": 4, "c": 30, "f": 1 },
+    { "id": "cong_arvejas", "name": "Arvejas congeladas", "emoji": "🫛", "kcal": 81, "p": 5, "c": 14, "f": 0.4 },
+    { "id": "cong_choclo", "name": "Choclo congelado", "emoji": "🌽", "kcal": 86, "p": 3.3, "c": 19, "f": 1.4 },
+    { "id": "cong_espinaca", "name": "Espinaca congelada", "emoji": "🥬", "kcal": 23, "p": 2.9, "c": 3.6, "f": 0.4 }
+  ]
+}
