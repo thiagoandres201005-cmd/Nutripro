@@ -1,30 +1,20 @@
-/* ============================================================================
-   SomaAi — Buscador v5 con FILTROS ARREGLADOS
-   ========================================================================== */
-
-const SEARCH_STATE = {
-  query: '',
-  results: [],
-  category: 'todas',
-  loading: false,
-  categoryFoods: {},
-};
+const SEARCH_STATE = { query: '', results: [], category: 'todas', loading: false, categoryFoods: {} };
 
 const SEARCH_CATEGORIES = [
   { id: 'todas', label: 'Todas', emoji: '🌐' },
-  { id: 'frutas', label: 'Frutas', emoji: '🍎', archivo: 'data/categorias/frutas.json', keywords: ['fruta', 'manzana', 'banana', 'naranja', 'pera', 'uva', 'frutilla', 'kiwi', 'palta', 'anana', 'mango', 'sandia', 'melon', 'durazno', 'cereza'] },
-  { id: 'verduras', label: 'Verduras', emoji: '🥦', archivo: 'data/categorias/verduras.json', keywords: ['verdura', 'tomate', 'lechuga', 'zanahoria', 'papa', 'cebolla', 'brocoli', 'espinaca', 'zapallo'] },
-  { id: 'carnes', label: 'Carnes', emoji: '🥩', archivo: 'data/categorias/carnes.json', keywords: ['carne', 'pollo', 'cerdo', 'vaca', 'asado', 'milanesa', 'huevo', 'pavo', 'bife', 'chorizo'] },
-  { id: 'pescados', label: 'Pescados', emoji: '🐟', archivo: 'data/categorias/pescados.json', keywords: ['pescado', 'atun', 'salmon', 'merluza', 'camaron', 'calamar', 'mariscos'] },
-  { id: 'cereales', label: 'Cereales', emoji: '🌾', archivo: 'data/categorias/cereales.json', keywords: ['arroz', 'avena', 'pan', 'pasta', 'fideo', 'trigo', 'cereal', 'quinoa'] },
-  { id: 'lacteos', label: 'Lácteos', emoji: '🥛', archivo: 'data/categorias/lacteos.json', keywords: ['leche', 'yogur', 'queso', 'crema', 'manteca', 'ricota', 'dulce de leche'] },
-  { id: 'bebidas', label: 'Bebidas', emoji: '🥤', archivo: 'data/categorias/bebidas.json', keywords: ['bebida', 'agua', 'jugo', 'gaseosa', 'cerveza', 'vino', 'cafe', 'te', 'coca', 'pepsi'] },
-  { id: 'comidas', label: 'Comidas', emoji: '🍽️', archivo: 'data/categorias/comidas.json', keywords: ['empanada', 'pizza', 'tarta', 'guiso', 'milanesa', 'hamburguesa', 'lasaña', 'ravioles'] },
-  { id: 'snacks', label: 'Snacks', emoji: '🍫', archivo: 'data/categorias/snacks.json', keywords: ['snack', 'galletita', 'papas', 'mani', 'almendra', 'chocolate', 'alfajor'] },
-  { id: 'condimentos', label: 'Condimentos', emoji: '🧂', archivo: 'data/categorias/condimentos.json', keywords: ['aceite', 'sal', 'azucar', 'salsa', 'vinagre', 'mayonesa', 'ketchup'] },
-  { id: 'congelados', label: 'Congelados', emoji: '🧊', archivo: 'data/categorias/congelados.json', keywords: ['congelado', 'mccain', 'granja del sol', 'paty'] },
-  { id: 'panificados', label: 'Panificados', emoji: '🥖', archivo: 'data/categorias/panificados.json', keywords: ['pan', 'factura', 'medialuna', 'bizcocho', 'torta', 'budin'] },
-  { id: 'golosinas', label: 'Golosinas', emoji: '🍬', archivo: 'data/categorias/golosinas.json', keywords: ['golosina', 'caramelo', 'chicle', 'chocolate', 'alfajor', 'bombon'] },
+  { id: 'frutas', label: 'Frutas', emoji: '🍎', keywords: ['fruta', 'manzana', 'banana', 'naranja', 'pera', 'uva', 'frutilla', 'kiwi', 'palta', 'anana', 'mango', 'sandia', 'melon', 'durazno', 'cereza', 'limon', 'mandarina', 'arandano', 'frambuesa', 'papaya'] },
+  { id: 'verduras', label: 'Verduras', emoji: '🥦', keywords: ['verdura', 'tomate', 'lechuga', 'zanahoria', 'papa', 'cebolla', 'brocoli', 'espinaca', 'zapallo', 'zucchini', 'morron', 'pepino', 'berenjena', 'ajo', 'choclo', 'batata'] },
+  { id: 'carnes', label: 'Carnes', emoji: '🥩', keywords: ['carne', 'pollo', 'cerdo', 'vaca', 'asado', 'milanesa', 'huevo', 'pavo', 'bife', 'chorizo', 'bondiola', 'chuleta', 'hamburguesa', 'morcilla', 'salchicha'] },
+  { id: 'pescados', label: 'Pescados', emoji: '🐟', keywords: ['pescado', 'atun', 'salmon', 'merluza', 'camaron', 'calamar', 'mariscos', 'sardina', 'trucha', 'pulpo', 'mejillones'] },
+  { id: 'cereales', label: 'Cereales', emoji: '🌾', keywords: ['arroz', 'avena', 'pan', 'pasta', 'fideo', 'trigo', 'cereal', 'quinoa', 'granola', 'copos'] },
+  { id: 'lacteos', label: 'Lácteos', emoji: '🥛', keywords: ['leche', 'yogur', 'queso', 'crema', 'manteca', 'ricota', 'dulce de leche'] },
+  { id: 'bebidas', label: 'Bebidas', emoji: '🥤', keywords: ['bebida', 'agua', 'jugo', 'gaseosa', 'cerveza', 'vino', 'cafe', 'te', 'coca', 'pepsi', 'sprite', 'fanta'] },
+  { id: 'comidas', label: 'Comidas', emoji: '🍽️', keywords: ['empanada', 'pizza', 'tarta', 'guiso', 'milanesa', 'hamburguesa', 'lasaña', 'ravioles', 'sushi'] },
+  { id: 'snacks', label: 'Snacks', emoji: '🍫', keywords: ['snack', 'galletita', 'papas', 'mani', 'almendra', 'chocolate', 'alfajor', 'nuez', 'barrita'] },
+  { id: 'condimentos', label: 'Condimentos', emoji: '🧂', keywords: ['aceite', 'sal', 'azucar', 'salsa', 'vinagre', 'mayonesa', 'ketchup', 'mostaza', 'oregano', 'soja'] },
+  { id: 'congelados', label: 'Congelados', emoji: '🧊', keywords: ['congelado', 'mccain', 'granja del sol', 'paty', 'ñoquis', 'arvejas'] },
+  { id: 'panificados', label: 'Panificados', emoji: '🥖', keywords: ['pan', 'factura', 'medialuna', 'bizcocho', 'torta', 'budin', 'baguette', 'pebete'] },
+  { id: 'golosinas', label: 'Golosinas', emoji: '🍬', keywords: ['golosina', 'caramelo', 'chicle', 'chocolate', 'alfajor', 'bombon', 'helado', 'torta'] },
 ];
 
 function normText(s) {
@@ -57,9 +47,7 @@ function fuzzyScore(query, target) {
   const qTokens = q.split(' ').filter(Boolean);
   const tTokens = t.split(' ').filter(Boolean);
   let hits = 0;
-  qTokens.forEach((qt) => {
-    if (tTokens.some((tt) => tt.includes(qt) || qt.includes(tt))) hits++;
-  });
+  qTokens.forEach((qt) => { if (tTokens.some((tt) => tt.includes(qt) || qt.includes(tt))) hits++; });
   if (hits > 0) return 0.6 + (hits / qTokens.length) * 0.3;
   if (q.length >= 4 && t.length >= 4) {
     const dist = levenshtein(q.slice(0, 20), t.slice(0, 20), 3);
@@ -69,16 +57,24 @@ function fuzzyScore(query, target) {
   return 0;
 }
 
+function filterByKeywords(foods, keywords) {
+  if (!keywords || keywords.length === 0) return foods;
+  return foods.filter(f => {
+    const name = normText((f.name || '') + ' ' + (f.brand || '') + ' ' + (f.cat || ''));
+    return keywords.some(k => name.includes(k));
+  });
+}
+
 async function loadCategoryFoods(categoryId) {
   if (SEARCH_STATE.categoryFoods[categoryId]) return SEARCH_STATE.categoryFoods[categoryId];
   const cat = SEARCH_CATEGORIES.find(c => c.id === categoryId);
   if (!cat) return [];
-  if (cat.archivo) {
+  if (cat.id !== 'todas') {
     try {
-      const res = await fetch(cat.archivo);
+      const res = await fetch('data/categorias/' + cat.id + '.json');
       if (res.ok) {
         const data = await res.json();
-        if (data.foods && Array.isArray(data.foods)) {
+        if (data.foods && Array.isArray(data.foods) && data.foods.length > 0) {
           SEARCH_STATE.categoryFoods[categoryId] = data.foods;
           return data.foods;
         }
@@ -87,12 +83,7 @@ async function loadCategoryFoods(categoryId) {
   }
   const S = window.SomaAi;
   if (!S || !S.state.foods || S.state.foods.length === 0) return [];
-  const keywords = cat.keywords || [];
-  if (keywords.length === 0) return [];
-  const filtered = S.state.foods.filter(f => {
-    const name = normText((f.name || '') + ' ' + (f.brand || '') + ' ' + (f.cat || ''));
-    return keywords.some(k => name.includes(k));
-  });
+  const filtered = filterByKeywords(S.state.foods, cat.keywords || []);
   SEARCH_STATE.categoryFoods[categoryId] = filtered;
   return filtered;
 }
@@ -101,26 +92,15 @@ async function searchFoods(query, categoryId) {
   const S = window.SomaAi;
   if (!S) return [];
   let pool = [];
-  if (categoryId && categoryId !== 'todas') {
-    pool = await loadCategoryFoods(categoryId);
-  } else {
-    pool = S.state.foods || [];
-  }
+  if (categoryId && categoryId !== 'todas') { pool = await loadCategoryFoods(categoryId); }
+  else { pool = S.state.foods || []; }
   if (!query || !query.trim()) return [];
   const scored = [];
   for (let i = 0; i < pool.length; i++) {
     const f = pool[i];
     let best = fuzzyScore(query, f.name || '');
-    if (Array.isArray(f.aliases)) {
-      for (const a of f.aliases) {
-        const s = fuzzyScore(query, a);
-        if (s > best) best = s;
-      }
-    }
-    if (f.brand) {
-      const sBrand = fuzzyScore(query, f.brand) * 0.8;
-      if (sBrand > best) best = sBrand;
-    }
+    if (Array.isArray(f.aliases)) { for (const a of f.aliases) { const s = fuzzyScore(query, a); if (s > best) best = s; } }
+    if (f.brand) { const sBrand = fuzzyScore(query, f.brand) * 0.8; if (sBrand > best) best = sBrand; }
     if (best > 0.4) scored.push({ food: f, score: best });
   }
   scored.sort((a, b) => b.score - a.score);
@@ -135,30 +115,25 @@ function renderSearch() {
   const S = window.SomaAi;
   if (!S) return document.createElement('div');
   const wrap = S.el('div', { class: 'stack fade-in' });
-
   const totalFoods = S.state.foods.length;
 
-  // Barra de búsqueda
   const searchCard = S.el('div', { class: 'card card-pad' });
-  searchCard.style.cssText = 'position:sticky;top:65px;z-index:20;overflow:visible';
+  searchCard.style.cssText = 'position:sticky;top:65px;z-index:20';
   searchCard.innerHTML =
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
       '<div class="eyebrow">🔍 Buscar alimentos</div>' +
       '<button class="btn btn-ghost btn-sm" id="manual-add" style="font-size:11px">✏️ Manual</button>' +
     '</div>' +
     '<div style="position:relative">' +
-      '<input type="text" id="search-input" placeholder="Buscar..." autocomplete="off" style="width:100%;padding:14px 40px 14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:500" />' +
-      '<button id="search-clear" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:var(--card2);border:1px solid var(--border);display:none;place-items:center;font-size:14px;color:var(--muted)">×</button>' +
+      '<input type="text" id="search-input" placeholder="Buscar..." autocomplete="off" value="' + escapeHtmlSearch(SEARCH_STATE.query) + '" style="width:100%;padding:14px 40px 14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:500" />' +
+      '<button id="search-clear" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:var(--card2);border:1px solid var(--border);display:' + (SEARCH_STATE.query ? 'grid' : 'none') + ';place-items:center;font-size:14px;color:var(--muted)">×</button>' +
     '</div>' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">' +
-      '<span class="muted2" style="font-size:11px">' + (totalFoods > 0 ? totalFoods + ' alimentos · Búsqueda con tolerancia a errores' : 'Cargando...') + '</span>' +
-    '</div>';
+    '<div style="margin-top:8px"><span class="muted2" style="font-size:11px">' + (totalFoods > 0 ? totalFoods + ' alimentos en la base' : 'Cargando...') + '</span></div>';
 
-  // Chips de categorías - con clase para el CSS
   const chipsContainer = S.el('div');
   chipsContainer.className = 'chips-container';
-  chipsContainer.style.cssText = 'display:flex;gap:6px;overflow-x:auto;margin-top:12px;padding:4px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none';
-  
+  chipsContainer.style.cssText = 'display:flex;gap:6px;overflow-x:auto;margin-top:12px;padding:4px 0 8px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none';
+
   SEARCH_CATEGORIES.forEach(cat => {
     const isActive = SEARCH_STATE.category === cat.id;
     const chip = S.el('button');
@@ -167,20 +142,15 @@ function renderSearch() {
     chip.textContent = cat.emoji + ' ' + cat.label;
     chip.onclick = () => {
       SEARCH_STATE.category = cat.id;
-      SEARCH_STATE.results = [];
+      SEARCH_STATE.categoryFoods = {};
       S.haptic();
       render();
-      setTimeout(() => {
-        const input = document.getElementById('search-input');
-        if (input) input.focus();
-      }, 100);
     };
     chipsContainer.appendChild(chip);
   });
   searchCard.appendChild(chipsContainer);
   wrap.appendChild(searchCard);
 
-  // Resultados
   const resultsContainer = S.el('div');
   resultsContainer.id = 'search-results';
   resultsContainer.style.cssText = 'margin-top:16px';
@@ -222,21 +192,20 @@ async function renderResults() {
   if (!container || !S) return;
   const q = SEARCH_STATE.query.trim();
   const cat = SEARCH_STATE.category;
+  const catObj = SEARCH_CATEGORIES.find(c => c.id === cat);
 
   if (!q) {
-    const catObj = SEARCH_CATEGORIES.find(c => c.id === cat);
     let ejemplos = [];
-    if (cat === 'todas') {
-      ejemplos = ['manzana', 'pollo', 'arroz', 'yogur', 'coca cola', 'empanada'];
-    } else {
-      const foods = await loadCategoryFoods(cat);
-      ejemplos = foods.slice(0, 6).map(f => f.name.split(' ')[0].toLowerCase());
-    }
+    if (cat === 'todas') { ejemplos = ['manzana', 'pollo', 'arroz', 'yogur', 'coca cola', 'empanada']; }
+    else { const foods = await loadCategoryFoods(cat); ejemplos = foods.slice(0, 6).map(f => f.name.split(' ')[0].toLowerCase()); }
+    const catFoods = cat !== 'todas' ? await loadCategoryFoods(cat) : null;
+    const countInfo = cat === 'todas' ? (S.state.foodsCount || 0) + ' alimentos disponibles' : (catFoods ? catFoods.length + ' alimentos en esta categoría' : 'Cargando...');
+
     container.innerHTML =
-      '<div class="card card-pad fade-in-up" style="text-align:center;padding:40px 20px">' +
+      '<div class="card card-pad fade-in-up" style="text-align:center;padding:32px 20px">' +
         '<div style="font-size:48px">' + (catObj ? catObj.emoji : '🔍') + '</div>' +
-        '<div class="h2" style="margin-top:16px">' + (cat === 'todas' ? 'Escribí para buscar' : 'Buscá en ' + (catObj ? catObj.label : '')) + '</div>' +
-        '<div class="muted" style="font-size:13px;margin-top:8px">Tenemos ' + (S.state.foodsCount || 0) + ' alimentos disponibles</div>' +
+        '<div class="h2" style="margin-top:16px">' + (cat === 'todas' ? 'Escribí para buscar' : 'Categoría: ' + (catObj ? catObj.label : '')) + '</div>' +
+        '<div class="muted" style="font-size:13px;margin-top:8px">' + countInfo + '</div>' +
         (ejemplos.length > 0 ? '<div class="eyebrow" style="margin-top:20px;color:var(--muted2)">EJEMPLOS</div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:12px">' + ejemplos.map(e => '<button class="btn btn-ghost btn-sm" data-example="' + escapeHtmlSearch(e) + '" style="font-size:11px">' + escapeHtmlSearch(e) + '</button>').join('') + '</div>' : '') +
       '</div>';
     setTimeout(() => {
@@ -258,7 +227,7 @@ async function renderResults() {
       '<div class="card card-pad" style="text-align:center;padding:40px 20px">' +
         '<div style="font-size:48px">😕</div>' +
         '<div class="h2" style="margin-top:16px">Sin resultados</div>' +
-        '<div class="muted" style="font-size:13px;margin-top:8px">No encontramos "' + escapeHtmlSearch(q) + '"</div>' +
+        '<div class="muted" style="font-size:13px;margin-top:8px">No encontramos "' + escapeHtmlSearch(q) + '"' + (cat !== 'todas' ? ' en ' + (catObj ? catObj.label : '') : '') + '</div>' +
         '<button class="btn btn-primary" id="manual-add-2" style="margin-top:20px">+ Agregar manualmente</button>' +
       '</div>';
     setTimeout(() => {
@@ -303,10 +272,7 @@ function showAddFoodModal(food) {
   modal.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:24px;width:100%;max-width:500px;transform:translateY(100%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);max-height:85vh;overflow-y:auto';
   modal.innerHTML =
     '<div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px"></div>' +
-    '<div style="display:flex;align-items:center;gap:12px">' +
-      '<div style="width:56px;height:56px;border-radius:16px;background:var(--surface);display:grid;place-items:center;font-size:28px">' + (food.emoji || '🍽️') + '</div>' +
-      '<div style="flex:1;min-width:0"><div class="h2" style="font-size:16px">' + escapeHtmlSearch(food.name) + '</div>' + (food.brand ? '<div class="muted2" style="font-size:11px">' + escapeHtmlSearch(food.brand) + '</div>' : '') + '</div>' +
-    '</div>' +
+    '<div style="display:flex;align-items:center;gap:12px"><div style="width:56px;height:56px;border-radius:16px;background:var(--surface);display:grid;place-items:center;font-size:28px">' + (food.emoji || '🍽️') + '</div><div style="flex:1;min-width:0"><div class="h2" style="font-size:16px">' + escapeHtmlSearch(food.name) + '</div>' + (food.brand ? '<div class="muted2" style="font-size:11px">' + escapeHtmlSearch(food.brand) + '</div>' : '') + '</div></div>' +
     '<div class="grid g-4" style="margin-top:16px;gap:6px">' +
       '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center"><div class="mono" style="font-size:14px;font-weight:800;color:var(--green)">' + (food.kcal || 0) + '</div><div class="muted2" style="font-size:9px">kcal</div></div>' +
       '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center"><div class="mono" style="font-size:14px;font-weight:800;color:var(--green)">' + (food.p || 0) + 'g</div><div class="muted2" style="font-size:9px">prot</div></div>' +
@@ -314,7 +280,7 @@ function showAddFoodModal(food) {
       '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center"><div class="mono" style="font-size:14px;font-weight:800;color:var(--pink)">' + (food.f || 0) + 'g</div><div class="muted2" style="font-size:9px">grasa</div></div>' +
     '</div>' +
     '<div class="muted2" style="font-size:10px;text-align:center;margin-top:6px">Valores por 100g</div>' +
-    '<label style="display:flex;flex-direction:column;gap:6px;margin-top:20px"><span class="eyebrow">Cantidad (g)</span><input type="number" id="add-grams" value="100" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:16px;font-weight:700" /></label>' +
+    '<label style="display:flex;flex-direction:column;gap:6px;margin-top:20px"><span class="eyebrow">Cantidad (g)</span><input type="number" id="add-grams" value="100" min="1" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:16px;font-weight:700" /></label>' +
     '<div style="margin-top:16px"><span class="eyebrow">Comida</span><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px" id="meal-buttons">' +
       ['desayuno', 'almuerzo', 'merienda', 'cena', 'snack'].map(m => '<button class="btn btn-ghost btn-sm" data-meal="' + m + '" style="font-size:10px;padding:8px 4px">' + m.charAt(0).toUpperCase() + m.slice(1, 3) + '</button>').join('') +
     '</div></div>' +
@@ -324,8 +290,8 @@ function showAddFoodModal(food) {
   setTimeout(() => { overlay.style.opacity = '1'; modal.style.transform = 'translateY(0)'; }, 10);
   let selectedMeal = 'almuerzo';
   const mealBtns = modal.querySelectorAll('[data-meal]');
-  mealBtns.forEach(b => { b.onclick = () => { mealBtns.forEach(x => x.classList.remove('btn-primary')); b.classList.add('btn-primary'); selectedMeal = b.dataset.meal; }; });
-  mealBtns[1].classList.add('btn-primary');
+  mealBtns.forEach(b => { b.onclick = () => { mealBtns.forEach(x => { x.classList.remove('btn-primary'); x.classList.add('btn-ghost'); }); b.classList.remove('btn-ghost'); b.classList.add('btn-primary'); selectedMeal = b.dataset.meal; }; });
+  mealBtns[1].classList.remove('btn-ghost'); mealBtns[1].classList.add('btn-primary');
   const close = () => { overlay.style.opacity = '0'; modal.style.transform = 'translateY(100%)'; setTimeout(() => overlay.remove(), 300); };
   modal.querySelector('#modal-cancel').onclick = close;
   overlay.onclick = (e) => { if (e.target === overlay) close(); };
@@ -349,8 +315,8 @@ function addFoodToDay(food, grams, meal) {
   }
   S.state.entries.push({ foodId: foodId, food: food, grams: grams, meal: meal, date: new Date().toISOString().slice(0, 10), addedAt: new Date().toISOString() });
   S.saveState();
-  S.toast('✅ ' + food.name + ' (' + grams + 'g) agregado a ' + meal);
-  S.haptic();
+  S.toast('✅ ' + food.name + ' (' + grams + 'g) → ' + meal);
+  S.haptic('success');
 }
 
 function showManualAddModal(prefillName) {
@@ -365,22 +331,35 @@ function showManualAddModal(prefillName) {
     '<div class="eyebrow" style="color:var(--green)">✏️ AGREGAR MANUALMENTE</div>' +
     '<div class="h2" style="margin-top:8px">Alimento personalizado</div>' +
     '<div class="muted" style="font-size:12px;margin-top:4px">Para productos que no están en la base. Valores por 100g.</div>' +
-    '<div style="margin-top:20px"><label style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"><span class="eyebrow">NOMBRE</span><input type="text" id="ma-name" value="' + escapeHtmlSearch(prefillName || '') + '" placeholder="Ej: Tortilla casera" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label><div class="grid g-2" style="gap:12px"><label style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">CALORÍAS (KCAL)</span><input type="number" id="ma-kcal" value="0" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label><label style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">PROTEÍNA (G)</span><input type="number" id="ma-p" value="0" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label><label style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">CARBOS (G)</span><input type="number" id="ma-c" value="0" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label><label style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">GRASA (G)</span><input type="number" id="ma-f" value="0" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label></div><div style="margin-top:16px"><span class="eyebrow">COMIDA</span><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px" id="ma-meals">' + ['desayuno', 'almuerzo', 'merienda', 'cena', 'snack'].map(m => '<button class="btn btn-ghost btn-sm" data-ma-meal="' + m + '" style="font-size:10px;padding:8px 4px">' + m.charAt(0).toUpperCase() + m.slice(1, 3) + '</button>').join('') + '</div></div><label style="display:flex;flex-direction:column;gap:6px;margin-top:16px"><span class="eyebrow">CANTIDAD (GRAMOS)</span><input type="number" id="ma-grams" value="100" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label></div>' +
+    '<div style="margin-top:20px">' +
+      '<label style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"><span class="eyebrow">NOMBRE</span><input type="text" id="ma-name" value="' + escapeHtmlSearch(prefillName || '') + '" placeholder="Ej: Tortilla casera" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label>' +
+      '<div class="grid g-2" style="gap:12px">' +
+        '<label style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">CALORÍAS (KCAL)</span><input type="number" id="ma-kcal" value="" placeholder="0" min="0" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label>' +
+        '<label style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">PROTEÍNA (G)</span><input type="number" id="ma-p" value="" placeholder="0" min="0" step="0.1" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label>' +
+        '<label style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">CARBOS (G)</span><input type="number" id="ma-c" value="" placeholder="0" min="0" step="0.1" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label>' +
+        '<label style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">GRASA (G)</span><input type="number" id="ma-f" value="" placeholder="0" min="0" step="0.1" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label>' +
+      '</div>' +
+      '<div style="margin-top:16px"><span class="eyebrow">COMIDA</span><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px" id="ma-meals">' +
+        ['desayuno', 'almuerzo', 'merienda', 'cena', 'snack'].map(m => '<button class="btn btn-ghost btn-sm" data-ma-meal="' + m + '" style="font-size:10px;padding:8px 4px">' + m.charAt(0).toUpperCase() + m.slice(1, 3) + '</button>').join('') +
+      '</div></div>' +
+      '<label style="display:flex;flex-direction:column;gap:6px;margin-top:16px"><span class="eyebrow">CANTIDAD (GRAMOS)</span><input type="number" id="ma-grams" value="100" min="1" style="padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px" /></label>' +
+    '</div>' +
     '<div style="display:flex;gap:8px;margin-top:20px"><button class="btn btn-ghost" id="ma-cancel" style="flex:1">Cancelar</button><button class="btn btn-primary" id="ma-add" style="flex:2">+ Crear y agregar</button></div>';
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
   setTimeout(() => { overlay.style.opacity = '1'; modal.style.transform = 'translateY(0)'; }, 10);
   let selectedMeal = 'almuerzo';
   const mealBtns = modal.querySelectorAll('[data-ma-meal]');
-  mealBtns.forEach(b => { b.onclick = () => { mealBtns.forEach(x => x.classList.remove('btn-primary')); b.classList.add('btn-primary'); selectedMeal = b.dataset.maMeal; }; });
-  mealBtns[1].classList.add('btn-primary');
+  mealBtns.forEach(b => { b.onclick = () => { mealBtns.forEach(x => { x.classList.remove('btn-primary'); x.classList.add('btn-ghost'); }); b.classList.remove('btn-ghost'); b.classList.add('btn-primary'); selectedMeal = b.dataset.maMeal; }; });
+  mealBtns[1].classList.remove('btn-ghost'); mealBtns[1].classList.add('btn-primary');
   const close = () => { overlay.style.opacity = '0'; modal.style.transform = 'translateY(100%)'; setTimeout(() => overlay.remove(), 300); };
   modal.querySelector('#ma-cancel').onclick = close;
   overlay.onclick = (e) => { if (e.target === overlay) close(); };
   modal.querySelector('#ma-add').onclick = () => {
     const name = modal.querySelector('#ma-name').value.trim();
     if (!name) { S.toast('⚠️ Poné un nombre'); return; }
-    const newFood = { id: 'manual_' + Date.now(), name: name, brand: '', emoji: '✏️', kcal: parseFloat(modal.querySelector('#ma-kcal').value) || 0, p: parseFloat(modal.querySelector('#ma-p').value) || 0, c: parseFloat(modal.querySelector('#ma-c').value) || 0, f: parseFloat(modal.querySelector('#ma-f').value) || 0, custom: true };
+    const parseNum = (id) => { const v = parseFloat(modal.querySelector(id).value); return isNaN(v) || v < 0 ? 0 : v; };
+    const newFood = { id: 'manual_' + Date.now(), name: name, brand: '', emoji: '✏️', kcal: parseNum('#ma-kcal'), p: parseNum('#ma-p'), c: parseNum('#ma-c'), f: parseNum('#ma-f'), custom: true };
     const grams = parseInt(modal.querySelector('#ma-grams').value) || 100;
     addFoodToDay(newFood, grams, selectedMeal);
     close();
