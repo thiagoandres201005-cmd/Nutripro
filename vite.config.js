@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   base: './',
@@ -6,9 +7,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      input: {
-        main: './index.html',
-      },
+      input: { main: './index.html' },
       output: {
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',
@@ -16,4 +15,12 @@ export default defineConfig({
       },
     },
   },
+  plugins: [
+    viteStaticCopy({
+      targets: [
+        { src: 'data/*.json', dest: 'data' },
+        { src: 'data/categorias/*.json', dest: 'data/categorias' },
+      ],
+    }),
+  ],
 });

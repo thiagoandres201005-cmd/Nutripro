@@ -123,47 +123,40 @@ function renderProductCard(product) {
 async function startScan() {
   const S = window.SomaAi;
   if (!S) return;
-
   const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
 
-  if (isCapacitor) {
-    try {
-      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
-      
-      // Verificar si está soportado
-      const supported = await BarcodeScanner.isSupported();
-      if (!supported.supported) {
-        S.toast('❌ Escáner no soportado en este dispositivo');
-        return;
-      }
+  if (!isCapacitor) { S.toast('📱 En web, usá el campo manual'); return; }
 
-      let perm = await BarcodeScanner.checkPermissions();
-      if (perm.camera === 'denied' || perm.camera === 'prompt' || perm.camera === 'prompt-with-rationale') {
-        perm = await BarcodeScanner.requestPermissions();
-      }
-      if (perm.camera !== 'granted' && perm.camera !== 'limited') {
-        if (S && S.showConfirm) {
-          S.showConfirm('Permiso de cámara denegado', 'Necesitamos acceso a la cámara para escanear códigos. ¿Querés abrir los ajustes?', () => {
-            try { BarcodeScanner.openSettings(); } catch (e) {}
+  // PASO 1: Pedir permiso de cámara con @capacitor/camera (diálogo nativo como notificación)
+  try {
+    const { Camera } = await import('@capacitor/camera');
+    const camPerm = await Camera.checkPermissions();
+    if (camPerm.camera !== 'granted') {
+      const reqPerm = await Camera.requestPermissions({ permissions: ['camera'] });
+      if (reqPerm.camera !== 'granted') {
+        if (S.showConfirm) {
+          S.showConfirm('Permiso de cámara necesario', 'Necesitamos acceso a la cámara para escanear códigos. ¿Querés abrir los ajustes?', () => {
+            try { window.open('app-settings:'); } catch (e) {}
           });
         }
         return;
       }
-
-      // Escanear
-      const result = await BarcodeScanner.scan();
-      if (result.barcodes && result.barcodes.length > 0) {
-        const code = result.barcodes[0].rawValue;
-        searchBarcode(code);
-      } else {
-        S.toast('🔍 No se detectó ningún código');
-      }
-    } catch (e) {
-      console.error('Error escaneando:', e);
-      S.toast('❌ Error: ' + (e.message || 'Desconocido'));
     }
-  } else {
-    S.toast('📱 En web, usá el campo manual');
+  } catch (e) { console.warn('Camera permission error:', e); }
+
+  // PASO 2: Escanear con MLKit
+  try {
+    const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+    const supported = await BarcodeScanner.isSupported();
+    if (!supported.supported) { S.toast('❌ Escáner no soportado'); return; }
+    const result = await BarcodeScanner.scan();
+    if (result.barcodes && result.barcodes.length > 0) {
+      searchBarcode(result.barcodes[0].rawValue);
+    } else {
+      S.toast('🔍 No se detectó código');
+    }
+  } catch (e) {
+    S.toast('❌ Error: ' + (e.message || 'Desconocido'));
   }
 }
 
