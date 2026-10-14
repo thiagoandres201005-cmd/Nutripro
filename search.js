@@ -125,7 +125,8 @@ function renderSearch() {
       '<button class="btn btn-ghost btn-sm" id="manual-add" style="font-size:11px">✏️ Manual</button>' +
     '</div>' +
     '<div style="position:relative">' +
-      '<input type="text" id="search-input" placeholder="Buscar..." autocomplete="off" value="' + escapeHtmlSearch(SEARCH_STATE.query) + '" style="width:100%;padding:14px 40px 14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:500" />' +
+      '<input type="text" id="search-input" placeholder="Buscar..." autocomplete="off" value="' + escapeHtmlSearch(SEARCH_STATE.query) + '" style="width:100%;padding:14px 90px 14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:500" />' +
+      '<button class="mic-btn" id="search-mic" title="Buscar por voz">🎤</button>' +
       '<button id="search-clear" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:var(--card2);border:1px solid var(--border);display:' + (SEARCH_STATE.query ? 'grid' : 'none') + ';place-items:center;font-size:14px;color:var(--muted)">×</button>' +
     '</div>' +
     '<div style="margin-top:8px"><span class="muted2" style="font-size:11px">' + (totalFoods > 0 ? totalFoods + ' alimentos en la base' : 'Cargando...') + '</span></div>';
@@ -174,6 +175,28 @@ function renderSearch() {
     };
     const manualBtn = document.getElementById('manual-add');
     if (manualBtn) manualBtn.onclick = () => showManualAddModal();
+    
+    // Búsqueda por voz
+    const micBtn = document.getElementById('search-mic');
+    if (micBtn) {
+      micBtn.onclick = async () => {
+        S.haptic('light');
+        micBtn.classList.add('listening');
+        micBtn.textContent = '⏺️';
+        if (window.SomaAiFeatures) {
+          await window.SomaAiFeatures.startVoiceSearch((text) => {
+            if (input) {
+              input.value = text;
+              SEARCH_STATE.query = text;
+              renderResults();
+              S.toast('🎤 "' + text + '"');
+            }
+          });
+        }
+        setTimeout(() => { micBtn.classList.remove('listening'); micBtn.textContent = '🎤'; }, 5000);
+      };
+    }
+    
     renderResults();
   }, 50);
 
@@ -247,6 +270,7 @@ async function renderResults() {
         (f.brand ? '<div class="muted2" style="font-size:10px">' + escapeHtmlSearch(f.brand) + '</div>' : '') +
         '<div style="display:flex;gap:6px;margin-top:4px"><span class="mono" style="font-size:10px;color:var(--muted)">' + (f.kcal || 0) + ' kcal</span><span class="mono" style="font-size:10px;color:var(--green)">P ' + (f.p || 0) + 'g</span><span class="mono" style="font-size:10px;color:var(--cyan)">C ' + (f.c || 0) + 'g</span><span class="mono" style="font-size:10px;color:var(--pink)">F ' + (f.f || 0) + 'g</span></div>' +
       '</div>' +
+      '<button class="fav-btn" data-fav-id="' + escapeHtmlSearch(f.id) + '">' + ((window.SomaAiFeatures && window.SomaAiFeatures.isFavorite(f.id)) ? '⭐' : '☆') + '</button>' +
       '<button class="icon-btn" data-add-idx="' + i + '" style="background:linear-gradient(135deg,var(--green),#00e07a);color:#000;border:none;font-weight:900;width:36px;height:36px;flex-shrink:0">+</button>' +
     '</div>';
   });
@@ -258,6 +282,15 @@ async function renderResults() {
         const idx = parseInt(btn.dataset.addIdx);
         const food = results[idx];
         if (food) showAddFoodModal(food);
+      };
+    });
+    document.querySelectorAll('[data-fav-id]').forEach(btn => {
+      btn.onclick = (ev) => {
+        ev.stopPropagation();
+        if (window.SomaAiFeatures) {
+          window.SomaAiFeatures.toggleFavorite(btn.dataset.favId);
+          btn.textContent = window.SomaAiFeatures.isFavorite(btn.dataset.favId) ? '⭐' : '☆';
+        }
       };
     });
   }, 50);

@@ -237,6 +237,30 @@ function renderHoy() {
   statsCard.appendChild(statsGrid);
   wrap.appendChild(statsCard);
 
+  // Acciones rápidas
+  const quickCard = el('div', { class: 'card card-pad fade-in-up' });
+  quickCard.innerHTML =
+    '<div class="eyebrow">⚡ Acciones rápidas</div>' +
+    '<div class="quick-actions">' +
+      '<button class="quick-action" id="qa-search"><div class="quick-action-icon">🔍</div><div class="quick-action-label">Buscar</div></button>' +
+      '<button class="quick-action" id="qa-camera"><div class="quick-action-icon">📷</div><div class="quick-action-label">Escanear</div></button>' +
+      '<button class="quick-action" id="qa-water"><div class="quick-action-icon">💧</div><div class="quick-action-label">+250ml</div></button>' +
+      '<button class="quick-action" id="qa-manual"><div class="quick-action-icon">✏️</div><div class="quick-action-label">Manual</div></button>' +
+    '</div>';
+  wrap.appendChild(quickCard);
+
+  // Estadísticas semanales
+  if (window.SomaAiFeatures) {
+    const weekCard = el('div', { class: 'card card-pad fade-in-up' });
+    weekCard.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><div class="eyebrow">📈 Última semana</div><span class="muted2" style="font-size:10px">kcal/día</span></div>' + window.SomaAiFeatures.renderWeekChart();
+    wrap.appendChild(weekCard);
+
+    // Logros
+    const achCard = el('div', { class: 'card card-pad fade-in-up' });
+    achCard.innerHTML = window.SomaAiFeatures.renderAchievements();
+    wrap.appendChild(achCard);
+  }
+
   // Card 4: Distribución del día
   if (state.entries.length > 0) {
     const meals = ['desayuno', 'almuerzo', 'merienda', 'cena', 'snack'];
@@ -252,15 +276,19 @@ function renderHoy() {
       items.forEach((e) => {
         const food = state.foods.find(f => f.id === e.foodId) || e.food;
         if (!food) return;
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1"><div style="width:36px;height:36px;border-radius:10px;background:var(--surface);display:grid;place-items:center;font-size:16px;flex-shrink:0">' + (food.emoji || '🍽️') + '</div><div style="min-width:0;flex:1"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(food.name) + '</div><div class="muted2" style="font-size:10px">' + e.grams + 'g · ' + (food.p || 0) + 'g prot</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="mono" style="font-size:12px;font-weight:700;color:var(--green)">' + Math.round((food.kcal || 0) * e.grams / 100) + '</span><button class="icon-btn" data-del-idx="' + state.entries.indexOf(e) + '" style="width:28px;height:28px;font-size:14px;color:var(--muted)">×</button></div></div>';
+        const entryIdx = state.entries.indexOf(e);
+        html += '<div class="entry-row" data-edit-idx="' + entryIdx + '" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'transparent\'"><div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1"><div style="width:36px;height:36px;border-radius:10px;background:var(--surface);display:grid;place-items:center;font-size:16px;flex-shrink:0">' + (food.emoji || '🍽️') + '</div><div style="min-width:0;flex:1"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(food.name) + '</div><div class="muted2" style="font-size:10px">' + e.grams + 'g · ' + (food.p || 0) + 'g prot</div></div></div><div style="display:flex;align-items:center;gap:6px"><span class="mono" style="font-size:12px;font-weight:700;color:var(--green)">' + Math.round((food.kcal || 0) * e.grams / 100) + '</span><button class="icon-btn" data-edit-idx="' + entryIdx + '" style="width:28px;height:28px;font-size:12px;color:var(--muted)">✏️</button></div></div>';
       });
       html += '</div>';
     });
     distCard.innerHTML = html;
     wrap.appendChild(distCard);
     setTimeout(() => {
-      document.querySelectorAll('[data-del-idx]').forEach(btn => {
-        btn.onclick = () => { state.entries.splice(parseInt(btn.dataset.delIdx), 1); saveState(); render(); toast('🗑️ Eliminado'); haptic(); };
+      document.querySelectorAll('[data-edit-idx]').forEach(btn => {
+        btn.onclick = (ev) => {
+          ev.stopPropagation();
+          if (window.SomaAiFeatures) window.SomaAiFeatures.editEntry(parseInt(btn.dataset.editIdx));
+        };
       });
       const clearDay = document.getElementById('clear-day');
       if (clearDay) clearDay.onclick = () => { showConfirm('¿Vaciar el día?', 'Se eliminarán todos los alimentos de hoy.', () => { state.entries = []; saveState(); render(); toast('🗑️ Día vaciado'); }); };
@@ -312,6 +340,16 @@ function renderHoy() {
     document.querySelectorAll('[data-water]').forEach((b) => { b.onclick = () => { haptic(); state.water += parseInt(b.dataset.water); saveState(); render(); }; });
     const resetWater = document.querySelector('[data-water-reset]');
     if (resetWater) resetWater.onclick = () => { haptic(); state.water = 0; saveState(); render(); };
+    // Handlers de acciones rápidas
+    const qaSearch = document.getElementById('qa-search');
+    if (qaSearch) qaSearch.onclick = () => { haptic(); state.currentTab = 'buscar'; render(); };
+    const qaCamera = document.getElementById('qa-camera');
+    if (qaCamera) qaCamera.onclick = () => { haptic(); state.currentTab = 'camara'; render(); };
+    const qaWater = document.getElementById('qa-water');
+    if (qaWater) qaWater.onclick = () => { haptic(); state.water += 250; saveState(); render(); toast('💧 +250ml'); };
+    const qaManual = document.getElementById('qa-manual');
+    if (qaManual) qaManual.onclick = () => { haptic(); if (window.SomaAiSearch && window.SomaAiSearch.showManual) window.SomaAiSearch.showManual(); else { state.currentTab = 'buscar'; render(); } };
+
     const weightEdit = document.getElementById('weight-edit');
     if (weightEdit) weightEdit.onclick = () => {
       haptic();
@@ -366,7 +404,7 @@ function render() {
   root.innerHTML = '';
   const app = el('div', { class: 'app' });
   const header = el('header', { class: 'top' });
-  header.innerHTML = '<div class="grad-line"></div><div class="container"><div class="row"><div class="logo"><div class="mark">S</div><div><div class="name">SomaAi</div><div class="sub">NUTRICIÓN INTELIGENTE</div></div></div><div class="top-actions"><button class="icon-btn" id="header-perfil">👤</button></div></div></div>';
+  header.innerHTML = '<div class="grad-line"></div><div class="container"><div class="row"><div class="logo"><div class="mark">S</div><div><div class="name">SomaAi</div><div class="sub">NUTRICIÓN INTELIGENTE</div></div></div><div class="top-actions"><button class="icon-btn" id="header-theme" title="Cambiar tema">🌙</button><button class="icon-btn" id="header-perfil">👤</button></div></div></div>';
   app.appendChild(header);
 
   const main = el('main');
@@ -411,6 +449,20 @@ function render() {
 
   const headerPerfil = document.getElementById('header-perfil');
   if (headerPerfil) headerPerfil.onclick = () => { haptic(); state.currentTab = 'perfil'; render(); };
+  const headerTheme = document.getElementById('header-theme');
+  if (headerTheme) {
+    // Actualizar icono según el tema actual
+    const currentTheme = localStorage.getItem('somaai_theme') || 'dark';
+    headerTheme.textContent = currentTheme === 'light' ? '☀️' : '🌙';
+    headerTheme.onclick = () => {
+      haptic();
+      const theme = localStorage.getItem('somaai_theme') || 'dark';
+      const newTheme = theme === 'light' ? 'dark' : 'light';
+      if (window.SomaAiFeatures) window.SomaAiFeatures.setTheme(newTheme);
+      render();
+      toast(newTheme === 'light' ? '☀️ Modo claro' : '🌙 Modo oscuro');
+    };
+  }
 }
 
 window.SomaAi = {
@@ -422,6 +474,7 @@ window.SomaAi = {
 async function init() {
   try {
     loadState();
+    if (window.SomaAiFeatures) window.SomaAiFeatures.init();
     loadAllDatabases();
     if (state.profile.onboarded) {
       render();
