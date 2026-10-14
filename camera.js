@@ -1,16 +1,12 @@
 /* ============================================================================
-   SomaAi — Módulo Cámara con Código de Barras
-   - Escanea códigos EAN-13, UPC-A, etc.
-   - Busca el producto en Open Food Facts
-   - Muestra macros y permite agregarlo al día
+   SomaAi — Módulo Cámara v2 con mejor manejo de permisos
    ========================================================================== */
 
 let cameraState = {
-  scanning: false,
-  lastResult: null,
+  product: null,
   loading: false,
   error: null,
-  product: null,
+  meal: null,
 };
 
 function renderCamera() {
@@ -18,35 +14,22 @@ function renderCamera() {
   if (!S) return document.createElement('div');
   const wrap = S.el('div', { class: 'stack fade-in' });
 
-  // Card principal de cámara
   const card = S.el('div', { class: 'card card-pad fade-in-up' });
   
   if (cameraState.product) {
-    // Mostrar producto escaneado
     card.innerHTML = renderProductCard(cameraState.product);
   } else if (cameraState.loading) {
-    // Cargando
-    card.innerHTML =
-      '<div style="text-align:center;padding:40px 0">' +
-        '<div class="skel" style="height:20px;width:60%;margin:0 auto 16px"></div>' +
-        '<div class="skel" style="height:14px;width:40%;margin:0 auto"></div>' +
-        '<div class="muted" style="font-size:12px;margin-top:16px">Buscando producto...</div>' +
-      '</div>';
+    card.innerHTML = '<div style="text-align:center;padding:40px 0"><div class="skel" style="height:20px;width:60%;margin:0 auto 16px"></div><div class="skel" style="height:14px;width:40%;margin:0 auto"></div><div class="muted" style="font-size:12px;margin-top:16px">Buscando producto...</div></div>';
   } else {
-    // Vista inicial del escáner
     card.innerHTML =
       '<div style="text-align:center;padding:20px 0">' +
         '<div style="font-size:64px">📷</div>' +
         '<div class="h2" style="margin-top:16px">Escanear producto</div>' +
-        '<div class="muted" style="font-size:13px;margin-top:8px;line-height:1.5">' +
-          'Apuntá la cámara al código de barras del producto. Se buscará automáticamente en la base de datos de Open Food Facts.' +
-        '</div>' +
+        '<div class="muted" style="font-size:13px;margin-top:8px;line-height:1.5">Apuntá la cámara al código de barras del producto. Se buscará automáticamente en la base de datos de Open Food Facts.</div>' +
         '<button class="btn btn-primary" id="scan-btn" style="margin-top:24px;width:100%">' +
           '🔍 Abrir cámara' +
         '</button>' +
-        '<div class="muted2" style="font-size:11px;margin-top:16px">' +
-          'También podés ingresar el código manualmente:' +
-        '</div>' +
+        '<div class="muted2" style="font-size:11px;margin-top:16px">También podés ingresar el código manualmente:</div>' +
         '<div style="display:flex;gap:8px;margin-top:8px">' +
           '<input type="text" id="barcode-manual" placeholder="Código de barras" style="flex:1;padding:10px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px" />' +
           '<button class="btn btn-ghost btn-sm" id="manual-search">Buscar</button>' +
@@ -55,7 +38,6 @@ function renderCamera() {
   }
   wrap.appendChild(card);
 
-  // Si hay producto, mostrar opciones de agregar
   if (cameraState.product) {
     const addCard = S.el('div', { class: 'card card-pad fade-in-up' });
     addCard.innerHTML =
@@ -79,7 +61,6 @@ function renderCamera() {
     wrap.appendChild(addCard);
   }
 
-  // Handlers
   setTimeout(() => {
     const scanBtn = document.getElementById('scan-btn');
     if (scanBtn) scanBtn.onclick = startScan;
@@ -87,15 +68,14 @@ function renderCamera() {
     const manualSearch = document.getElementById('manual-search');
     if (manualSearch) manualSearch.onclick = () => {
       const input = document.getElementById('barcode-manual');
-      if (input && input.value.trim()) {
-        searchBarcode(input.value.trim());
-      }
+      if (input && input.value.trim()) searchBarcode(input.value.trim());
     };
 
     document.querySelectorAll('[data-cam-meal]').forEach(b => {
       b.onclick = () => {
         cameraState.meal = b.dataset.camMeal;
-        document.querySelectorAll('[data-cam-meal]').forEach(x => x.classList.remove('btn-primary'));
+        document.querySelectorAll('[data-cam-meal]').forEach(x => { x.classList.remove('btn-primary'); x.classList.add('btn-ghost'); });
+        b.classList.remove('btn-ghost');
         b.classList.add('btn-primary');
       };
     });
@@ -108,11 +88,7 @@ function renderCamera() {
     };
 
     const cancelBtn = document.getElementById('cam-cancel');
-    if (cancelBtn) cancelBtn.onclick = () => {
-      cameraState.product = null;
-      cameraState.error = null;
-      render();
-    };
+    if (cancelBtn) cancelBtn.onclick = () => { cameraState.product = null; cameraState.error = null; render(); };
   }, 50);
 
   return wrap;
@@ -136,22 +112,10 @@ function renderProductCard(product) {
     '</div>' +
   '</div>' +
   '<div class="grid g-4" style="margin-top:16px;gap:6px">' +
-    '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center">' +
-      '<div class="mono" style="font-size:14px;font-weight:800;color:var(--green)">' + kcal + '</div>' +
-      '<div class="muted2" style="font-size:9px">kcal</div>' +
-    '</div>' +
-    '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center">' +
-      '<div class="mono" style="font-size:14px;font-weight:800;color:var(--green)">' + p + 'g</div>' +
-      '<div class="muted2" style="font-size:9px">prot</div>' +
-    '</div>' +
-    '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center">' +
-      '<div class="mono" style="font-size:14px;font-weight:800;color:var(--cyan)">' + c + 'g</div>' +
-      '<div class="muted2" style="font-size:9px">carb</div>' +
-    '</div>' +
-    '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center">' +
-      '<div class="mono" style="font-size:14px;font-weight:800;color:var(--pink)">' + f + 'g</div>' +
-      '<div class="muted2" style="font-size:9px">grasa</div>' +
-    '</div>' +
+    '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center"><div class="mono" style="font-size:14px;font-weight:800;color:var(--green)">' + kcal + '</div><div class="muted2" style="font-size:9px">kcal</div></div>' +
+    '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center"><div class="mono" style="font-size:14px;font-weight:800;color:var(--green)">' + p + 'g</div><div class="muted2" style="font-size:9px">prot</div></div>' +
+    '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center"><div class="mono" style="font-size:14px;font-weight:800;color:var(--cyan)">' + c + 'g</div><div class="muted2" style="font-size:9px">carb</div></div>' +
+    '<div style="padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border);text-align:center"><div class="mono" style="font-size:14px;font-weight:800;color:var(--pink)">' + f + 'g</div><div class="muted2" style="font-size:9px">grasa</div></div>' +
   '</div>' +
   '<div class="muted2" style="font-size:10px;text-align:center;margin-top:8px">Valores por 100g</div>';
 }
@@ -166,25 +130,33 @@ async function startScan() {
     try {
       const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
       
-      // Pedir permisos
-      const perm = await BarcodeScanner.requestPermissions();
-      if (perm.camera !== 'granted') {
-        S.toast('❌ Permiso de cámara denegado');
+      // Verificar si está soportado
+      const supported = await BarcodeScanner.isSupported();
+      if (!supported.supported) {
+        S.toast('❌ Escáner no soportado en este dispositivo');
         return;
       }
-      
+
+      // Pedir permisos
+      const perm = await BarcodeScanner.requestPermissions();
+      if (perm.camera !== 'granted' && perm.camera !== 'limited') {
+        S.toast('❌ Permiso de cámara denegado. Andá a Ajustes → Apps → SomaAi → Permisos → Cámara');
+        return;
+      }
+
       // Escanear
       const result = await BarcodeScanner.scan();
       if (result.barcodes && result.barcodes.length > 0) {
         const code = result.barcodes[0].rawValue;
         searchBarcode(code);
+      } else {
+        S.toast('🔍 No se detectó ningún código');
       }
     } catch (e) {
       console.error('Error escaneando:', e);
-      S.toast('❌ Error al escanear');
+      S.toast('❌ Error: ' + (e.message || 'Desconocido'));
     }
   } else {
-    // Fallback web: pedir código manual
     S.toast('📱 En web, usá el campo manual');
   }
 }
@@ -207,14 +179,15 @@ async function searchBarcode(code) {
       cameraState.loading = false;
       render();
       S.toast('✅ Producto encontrado');
+      S.haptic('success');
     } else {
-      cameraState.error = 'Producto no encontrado en la base de datos';
+      cameraState.error = 'Producto no encontrado';
       cameraState.loading = false;
       render();
       S.toast('❌ Producto no encontrado');
     }
   } catch (e) {
-    cameraState.error = 'Error al buscar el producto';
+    cameraState.error = 'Error al buscar';
     cameraState.loading = false;
     render();
     S.toast('❌ Error de conexión');
@@ -232,13 +205,11 @@ function addScannedProduct(grams, meal) {
     id: 'scan_' + p.code + '_' + Date.now(),
     name: p.product_name || 'Producto escaneado',
     brand: p.brands || '',
+    emoji: '📦',
     kcal: Math.round(nutriments['energy-kcal_100g'] || 0),
     p: Math.round((nutriments.proteins_100g || 0) * 10) / 10,
     c: Math.round((nutriments.carbohydrates_100g || 0) * 10) / 10,
     f: Math.round((nutriments.fat_100g || 0) * 10) / 10,
-    fib: Math.round((nutriments.fiber_100g || 0) * 10) / 10,
-    sug: Math.round((nutriments.sugars_100g || 0) * 10) / 10,
-    na: Math.round((nutriments.sodium_100g || 0) * 1000) / 1000,
     custom: true,
     scanned: true,
   };
@@ -262,6 +233,7 @@ function addScannedProduct(grams, meal) {
   S.state.currentTab = 'hoy';
   S.render();
   S.toast('✅ ' + food.name + ' agregado');
+  S.haptic('success');
 }
 
 window.SomaAiCamera = {
