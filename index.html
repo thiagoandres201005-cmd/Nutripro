@@ -6,8 +6,23 @@
   <meta name="theme-color" content="#0a0a0b">
   <title>SomaAi</title>
   <link rel="stylesheet" href="./core.css">
+  <style>
+    #debug-panel {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: #001a00; color: #0f0;
+      padding: 12px; font-size: 11px; font-family: monospace;
+      z-index: 9999; max-height: 50vh; overflow-y: auto;
+      border-bottom: 2px solid #0f0;
+      display: none;
+    }
+    #debug-panel.show { display: block; }
+    #debug-panel .err { color: #f00; }
+    #debug-panel .warn { color: #ff0; }
+    #debug-panel .info { color: #0ff; }
+  </style>
 </head>
 <body>
+  <div id="debug-panel"></div>
   <div id="splash-screen" class="splash">
     <div style="text-align:center">
       <div class="splash-logo">S</div>
@@ -19,16 +34,48 @@
   </div>
   <div id="app-root"></div>
   <script>
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        var splash = document.getElementById('splash-screen');
-        if (splash) {
-          splash.style.transition = 'opacity 0.5s ease';
-          splash.style.opacity = '0';
-          setTimeout(function() { splash.remove(); }, 500);
-        }
-      }, 1500);
+    // Panel de diagnóstico
+    const dbg = document.getElementById('debug-panel');
+    function log(msg, type) {
+      const cls = type || 'info';
+      const time = new Date().toLocaleTimeString();
+      dbg.innerHTML += '<div class="' + cls + '">[' + time + '] ' + msg + '</div>';
+      dbg.scrollTop = dbg.scrollHeight;
+    }
+    window._log = log;
+    window.addEventListener('error', function(e) {
+      log('ERROR: ' + e.message + ' @ ' + (e.filename || '').split('/').pop() + ':' + e.lineno, 'err');
     });
+    window.addEventListener('unhandledrejection', function(e) {
+      const msg = e.reason && e.reason.message ? e.reason.message : String(e.reason);
+      log('PROMISE REJECTED: ' + msg, 'err');
+    });
+    // Mostrar el panel si estamos en Capacitor
+    setTimeout(() => {
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        log('✓ Capacitor detectado', 'info');
+        log('Plugins: ' + Object.keys(window.Capacitor.Plugins || {}).join(', '), 'info');
+      } else {
+        log('✗ Capacitor NO detectado (web)', 'warn');
+      }
+      setTimeout(() => {
+        log('SomaAi: ' + (window.SomaAi ? 'SI' : 'NO'), 'info');
+        log('SomaAiProfile: ' + (window.SomaAiProfile ? 'SI' : 'NO'), 'info');
+        log('SomaAiFeatures: ' + (window.SomaAiFeatures ? 'SI' : 'NO'), 'info');
+        log('SomaAiCamera: ' + (window.SomaAiCamera ? 'SI' : 'NO'), 'info');
+        log('SomaAiOnboarding: ' + (window.SomaAiOnboarding ? 'SI' : 'NO'), 'info');
+        log('app-root hijos: ' + document.getElementById('app-root').children.length, 'info');
+        
+        // Mostrar el panel solo si hay errores
+        const hasErrors = dbg.querySelector('.err');
+        if (hasErrors) {
+          dbg.classList.add('show');
+          log('⚠️ Errores detectados - panel visible', 'warn');
+        } else {
+          log('✓ Sin errores', 'info');
+        }
+      }, 3000);
+    }, 1000);
   </script>
   <script type="module" src="./utils.js"></script>
   <script type="module" src="./features.js"></script>
