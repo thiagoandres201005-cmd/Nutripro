@@ -125,30 +125,62 @@ async function startScan() {
   if (!S) return;
   const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
 
-  if (!isCapacitor) { S.toast('📱 En web, usá el campo manual'); return; }
+  if (!isCapacitor) { S.toast('📱 En web usá el campo manual'); return; }
 
-  // PASO 1: Pedir permiso de cámara con @capacitor/camera (diálogo nativo como notificación)
+  // PASO 1: Verificar permiso sin disparar diálogos
   try {
     const { Camera } = await import('@capacitor/camera');
     const camPerm = await Camera.checkPermissions();
+    
+    // Si el permiso no está concedido, disparamos Camera.getPhoto() con prompt
+    // Esto fuerza a Android a mostrar el diálogo nativo (igual que notificaciones)
     if (camPerm.camera !== 'granted') {
-      const reqPerm = await Camera.requestPermissions({ permissions: ['camera'] });
-      if (reqPerm.camera !== 'granted') {
+      try {
+        // Intentar con Camera.requestPermissions (que en Android 13+ muestra diálogo)
+        const reqPerm = await Camera.requestPermissions({ permissions: ['camera'] });
+        if (reqPerm.camera !== 'granted') {
+          // Si todavía no está, es porque el usuario denegó o es permanente
+          if (S.showConfirm) {
+            S.showConfirm('Permiso de cámara', 'Necesitamos acceso a la cámara para escanear códigos. ¿Querés abrir los ajustes?', () => {
+              try { window.open('app-settings:'); } catch (e) {}
+            });
+          }
+          return;
+        }
+      } catch (e) {
+        // Si falla, mostramos el diálogo de ajustes
         if (S.showConfirm) {
-          S.showConfirm('Permiso de cámara necesario', 'Necesitamos acceso a la cámara para escanear códigos. ¿Querés abrir los ajustes?', () => {
+          S.showConfirm('Permiso de cámara', 'Necesitamos acceso a la cámara. ¿Abrir ajustes?', () => {
             try { window.open('app-settings:'); } catch (e) {}
           });
         }
         return;
       }
     }
-  } catch (e) { console.warn('Camera permission error:', e); }
+  } catch (e) {
+    console.warn('Camera perm check error:', e);
+  }
 
-  // PASO 2: Escanear con MLKit
+  // PASO 2: Esperar un poco para que el diálogo se cierre
+  await new Promise(r => setTimeout(r, 300));
+
+  // PASO 3: Escanear con MLKit
   try {
     const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+    
+    // Verificar permiso de MLKit (que puede diferir del de Camera)
+    const mlkitPerm = await BarcodeScanner.checkPermissions();
+    if (mlkitPerm.camera !== 'granted' && mlkitPerm.camera !== 'limited') {
+      const mlkitReq = await BarcodeScanner.requestPermissions();
+      if (mlkitReq.camera !== 'granted' && mlkitReq.camera !== 'limited') {
+        S.toast('❌ Permiso de MLKit denegado');
+        return;
+      }
+    }
+    
     const supported = await BarcodeScanner.isSupported();
     if (!supported.supported) { S.toast('❌ Escáner no soportado'); return; }
+    
     const result = await BarcodeScanner.scan();
     if (result.barcodes && result.barcodes.length > 0) {
       searchBarcode(result.barcodes[0].rawValue);
@@ -156,6 +188,7 @@ async function startScan() {
       S.toast('🔍 No se detectó código');
     }
   } catch (e) {
+    console.error('Scan error:', e);
     S.toast('❌ Error: ' + (e.message || 'Desconocido'));
   }
 }

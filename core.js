@@ -45,7 +45,9 @@ function loadState() {
       if (parsed.entries) state.entries = parsed.entries;
       if (parsed.customFoods) state.customFoods = parsed.customFoods;
       if (parsed.profile) {
+        const savedAvatar = parsed.profile.avatar;
         state.profile = { ...state.profile, ...parsed.profile };
+        if (savedAvatar) state.profile.avatar = savedAvatar;
         state.profile.weight = Number(state.profile.weight) || 72.4;
         state.profile.height = Number(state.profile.height) || 168;
         state.profile.age = Number(state.profile.age) || 28;
