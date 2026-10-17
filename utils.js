@@ -169,3 +169,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Exponer haptic global
 window.hapticReal = utilsHaptic;
+
+
+// Función para programar notificaciones automáticamente según config
+async function utilsAutoScheduleNotifications() {
+  if (!UTILS_STATE.isCapacitor) return;
+  try {
+    const notif = window.SomaAi?.state?.profile?.settings?.notifications || { water: true, meals: true, daily: false };
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
+    
+    // Cancelar todas las previas
+    const pending = await LocalNotifications.getPending();
+    if (pending.notifications.length > 0) {
+      await LocalNotifications.cancel({ notifications: pending.notifications });
+    }
+    
+    const notifications = [];
+    
+    // Agua: cada 2 horas de 8am a 10pm
+    if (notif.water) {
+      for (let hour = 8; hour <= 22; hour += 2) {
+        notifications.push({
+          id: 1000 + hour,
+          title: '💧 Hora de hidratarte',
+          body: 'Tomá un vaso de agua para mantenerte hidratado',
+          schedule: { at: new Date(new Date().setHours(hour, 0, 0, 0)), repeats: true, every: 'day' },
+          sound: null,
+        });
+      }
+    }
+    
+    // Comidas
+    if (notif.meals) {
+      notifications.push(
+        { id: 2001, title: '🌅 Desayuno', body: '¿Ya registraste tu desayuno?', schedule: { at: new Date(new Date().setHours(9, 0, 0, 0)), repeats: true, every: 'day' }, sound: null },
+        { id: 2002, title: '☀️ Almuerzo', body: '¿Ya registraste tu almuerzo?', schedule: { at: new Date(new Date().setHours(13, 0, 0, 0)), repeats: true, every: 'day' }, sound: null },
+        { id: 2003, title: '🍵 Merienda', body: '¿Ya registraste tu merienda?', schedule: { at: new Date(new Date().setHours(17, 0, 0, 0)), repeats: true, every: 'day' }, sound: null },
+        { id: 2004, title: '🌙 Cena', body: '¿Ya registraste tu cena?', schedule: { at: new Date(new Date().setHours(21, 0, 0, 0)), repeats: true, every: 'day' }, sound: null }
+      );
+    }
+    
+    // Resumen diario
+    if (notif.daily) {
+      notifications.push({
+        id: 3001,
+        title: '📊 Resumen del día',
+        body: '¿Cómo te fue hoy? Revisá tus macros',
+        schedule: { at: new Date(new Date().setHours(21, 30, 0, 0)), repeats: true, every: 'day' },
+        sound: null,
+      });
+    }
+    
+    if (notifications.length > 0) {
+      await LocalNotifications.schedule({ notifications });
+      console.log('[SomaAi] ' + notifications.length + ' notificaciones programadas');
+    }
+  } catch (e) {
+    console.error('Error schedule auto:', e);
+  }
+}
+
+window.utilsAutoScheduleNotifications = utilsAutoScheduleNotifications;

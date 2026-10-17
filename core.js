@@ -61,6 +61,25 @@ function loadState() {
     }
     const today = new Date().toISOString().slice(0, 10);
     if (state.date !== today) {
+      // Archivar los entries del día anterior antes de borrarlos
+      if (state.entries && state.entries.length > 0) {
+        try {
+          const historyKey = 'somaai_history';
+          let history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+          history.push({
+            date: state.date,
+            entries: state.entries,
+            water: state.water,
+            totalKcal: state.entries.reduce((sum, e) => {
+              const food = state.foods.find(f => f.id === e.foodId) || e.food;
+              return sum + ((food?.kcal || 0) * (e.grams || 100) / 100);
+            }, 0),
+          });
+          // Mantener solo los últimos 90 días
+          if (history.length > 90) history = history.slice(-90);
+          localStorage.setItem(historyKey, JSON.stringify(history));
+        } catch (e) { console.error('Error archivando historial:', e); }
+      }
       state.entries = []; state.water = 0; state.date = today; saveState();
     }
   } catch (e) {}
@@ -479,10 +498,16 @@ function render() {
   }
 }
 
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('somaai_history') || '[]');
+  } catch (e) { return []; }
+}
+
 window.SomaAi = {
   state, saveState, loadState, loadAllDatabases,
   calcTargets, calcTotals, el, render, renderHoy,
-  toast, haptic, escapeHtml, showConfirm,
+  toast, haptic, escapeHtml, showConfirm, getHistory,
 };
 
 async function init() {

@@ -1065,3 +1065,86 @@ header.top {
   box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.12) !important;
   outline: none;
 }
+
+/* ============ MODO CLARO COMPLETO ============ */
+body.light-theme {
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --card2: #f0f0f3;
+  --surface: #fafafa;
+  --border: rgba(0, 0, 0, 0.08);
+  --border2: rgba(0, 0, 0, 0.14);
+  --text: #0a0a0b;
+  --muted: #6b7280;
+  --muted2: #9ca3af;
+}
+body.light-theme header.top {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+body.light-theme nav {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+body.light-theme .logo .name {
+  background: linear-gradient(90deg, #000, #4b5563);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+body.light-theme .logo .mark {
+  color: #000 !important;
+}
+body.light-theme .card {
+  background: #ffffff !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+}
+body.light-theme .card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+}
+body.light-theme .btn-ghost {
+  background: #f5f5f7 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #0a0a0b !important;
+}
+body.light-theme .btn-white {
+  background: #0a0a0b !important;
+  color: #ffffff !important;
+}
+body.light-theme input,
+body.light-theme select,
+body.light-theme textarea {
+  background: #f5f5f7 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #0a0a0b !important;
+}
+body.light-theme input::placeholder {
+  color: #9ca3af !important;
+}
+body.light-theme .skel {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%) !important;
+}
+body.light-theme .settings-item {
+  background: #ffffff !important;
+  color: #0a0a0b !important;
+}
+body.light-theme .settings-item:active {
+  background: #f0f0f3 !important;
+}
+body.light-theme .stat-card {
+  background: #f5f5f7 !important;
+}
+body.light-theme .pill {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+body.light-theme .pill.green {
+  background: rgba(0, 255, 136, 0.15) !important;
+  color: #059669 !important;
+}
+body.light-theme .chip-btn:not(.active) {
+  background: #f5f5f7 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #6b7280 !important;
+}
