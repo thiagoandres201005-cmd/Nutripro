@@ -160,6 +160,33 @@ function renderProfile() {
     });
     card3.appendChild(listContainer);
   }
+
+  // Card Historial de comidas
+  if (S.getHistory) {
+    const foodHistory = S.getHistory();
+    const historyCard = S.el('div', { class: 'card card-pad fade-in-up' });
+    let historyHtml = '<div class="h2">🍽️ Historial de comidas</div>';
+    
+    if (foodHistory.length === 0) {
+      historyHtml += '<div class="muted" style="font-size:12px;margin-top:12px;text-align:center;padding:20px 0">Todavía no hay registros anteriores.</div>';
+    } else {
+      historyHtml += '<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;max-height:250px;overflow-y:auto">';
+      foodHistory.slice().reverse().forEach(day => {
+        const date = new Date(day.date + 'T12:00:00');
+        const dayName = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][date.getDay()];
+        const dateFormatted = dayName + ' ' + date.getDate() + '/' + (date.getMonth() + 1);
+        historyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">' +
+          '<div><div style="font-size:13px;font-weight:700">' + dateFormatted + '</div>' +
+          '<div class="muted2" style="font-size:10px">' + day.entries.length + ' alimentos · ' + day.water + ' ml</div></div>' +
+          '<div class="mono" style="font-size:14px;font-weight:800;color:var(--green)">' + Math.round(day.totalKcal) + ' kcal</div>' +
+        '</div>';
+      });
+      historyHtml += '</div>';
+    }
+    historyCard.innerHTML = historyHtml;
+    wrap.appendChild(historyCard);
+  }
+
   wrap.appendChild(card3);
 
   // Handlers

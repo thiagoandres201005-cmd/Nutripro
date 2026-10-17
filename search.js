@@ -206,7 +206,20 @@ function renderSearch() {
 let searchTimeout = null;
 function debouncedSearch() {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(async () => { await renderResults(); }, 200);
+  searchTimeout = setTimeout(async () => {
+    const q = SEARCH_STATE.query.trim();
+    if (q.length >= 3) {
+      // Guardar búsqueda reciente
+      try {
+        let recent = JSON.parse(localStorage.getItem('somaai_recent_searches') || '[]');
+        recent = recent.filter(s => s !== q);
+        recent.unshift(q);
+        if (recent.length > 5) recent = recent.slice(0, 5);
+        localStorage.setItem('somaai_recent_searches', JSON.stringify(recent));
+      } catch (e) {}
+    }
+    await renderResults();
+  }, 200);
 }
 
 async function renderResults() {
@@ -224,6 +237,17 @@ async function renderResults() {
     const catFoods = cat !== 'todas' ? await loadCategoryFoods(cat) : null;
     const countInfo = cat === 'todas' ? (S.state.foodsCount || 0) + ' alimentos disponibles' : (catFoods ? catFoods.length + ' alimentos en esta categoría' : 'Cargando...');
 
+    // Mostrar búsquedas recientes si hay
+    let recentHtml = '';
+    try {
+      const recent = JSON.parse(localStorage.getItem('somaai_recent_searches') || '[]');
+      if (recent.length > 0 && cat === 'todas') {
+        recentHtml = '<div class="card card-pad fade-in-up" style="margin-top:12px"><div class="eyebrow" style="margin-bottom:12px">🕐 Búsquedas recientes</div><div style="display:flex;gap:6px;flex-wrap:wrap">' +
+          recent.map(r => '<button class="btn btn-ghost btn-sm" data-recent="' + escapeHtmlSearch(r) + '" style="font-size:11px">' + escapeHtmlSearch(r) + '</button>').join('') +
+        '</div></div>';
+      }
+    } catch (e) {}
+
     container.innerHTML =
       '<div class="card card-pad fade-in-up" style="text-align:center;padding:32px 20px">' +
         '<div style="font-size:48px">' + (catObj ? catObj.emoji : '🔍') + '</div>' +
@@ -238,7 +262,15 @@ async function renderResults() {
           if (input) { input.value = btn.dataset.example; SEARCH_STATE.query = btn.dataset.example; renderResults(); }
         };
       });
+      document.querySelectorAll('[data-recent]').forEach(btn => {
+        btn.onclick = () => {
+          const input = document.getElementById('search-input');
+          if (input) { input.value = btn.dataset.recent; SEARCH_STATE.query = btn.dataset.recent; renderResults(); }
+        };
+      });
     }, 50);
+    // Agregar el HTML de recientes después
+    if (recentHtml) container.innerHTML += recentHtml;
     return;
   }
 

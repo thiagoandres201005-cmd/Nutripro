@@ -259,6 +259,29 @@ function renderHoy() {
   statsCard.appendChild(statsGrid);
   wrap.appendChild(statsCard);
 
+  // Favoritos (si hay)
+  if (window.SomaAiFeatures && window.SomaAiFeatures.favorites && window.SomaAiFeatures.favorites.length > 0) {
+    const favCard = el('div', { class: 'card card-pad fade-in-up' });
+    const favIds = window.SomaAiFeatures.favorites.slice(0, 4);
+    const favFoods = favIds.map(id => state.foods.find(f => f.id === id)).filter(Boolean);
+    if (favFoods.length > 0) {
+      let favHtml = '<div class="eyebrow" style="margin-bottom:12px">⭐ Favoritos</div><div style="display:flex;flex-direction:column;gap:8px">';
+      favFoods.forEach(f => {
+        favHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">' +
+          '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">' +
+            '<div style="font-size:18px">' + (f.emoji || '🍽️') + '</div>' +
+            '<div style="min-width:0;flex:1"><div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(f.name) + '</div>' +
+            '<div class="muted2" style="font-size:10px">' + (f.kcal || 0) + ' kcal/100g</div></div>' +
+          '</div>' +
+          '<button class="icon-btn" data-fav-add="' + escapeHtml(f.id) + '" style="width:32px;height:32px;background:var(--green);color:#000;border:none;font-weight:900;font-size:16px;flex-shrink:0">+</button>' +
+        '</div>';
+      });
+      favHtml += '</div>';
+      favCard.innerHTML = favHtml;
+      wrap.appendChild(favCard);
+    }
+  }
+
   // Acciones rápidas
   const quickCard = el('div', { class: 'card card-pad fade-in-up' });
   quickCard.innerHTML =
