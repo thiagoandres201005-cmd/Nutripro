@@ -30,7 +30,7 @@ function renderProfile() {
   const card1 = S.el('div', { class: 'card card-pad fade-in-up' });
   const avatarSrc = p.avatar || S.state.profile.avatar || null;
   const avatarHtml = avatarSrc
-    ? '<img src="' + avatarSrc + '" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" />'
+    ? '<img src="' + avatarSrc + '" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" onerror="this.style.display=\'none\'" />'
     : '<span>👤</span>';
   card1.innerHTML =
     '<div style="display:flex;flex-direction:column;align-items:center;gap:16px">' +
@@ -280,6 +280,7 @@ async function pickImage(S, source) {
         })); } catch (e) {}
         S.state.currentTab = 'perfil';
         S.render();
+        setTimeout(() => S.render(), 100);
         S.toast('✅ Foto actualizada');
         S.haptic('success');
       }
@@ -304,6 +305,7 @@ async function pickImage(S, source) {
         })); } catch (e) {}
         S.state.currentTab = 'perfil';
         S.render();
+        setTimeout(() => S.render(), 100);
         S.toast('✅ Foto actualizada');
       };
       reader.readAsDataURL(file);
