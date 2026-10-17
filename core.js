@@ -29,7 +29,7 @@ function saveState() {
     localStorage.setItem('somaai_state', JSON.stringify({
       version: state.version, date: state.date, water: state.water,
       weight: state.weight, entries: state.entries, profile: state.profile,
-      customFoods: state.customFoods,
+      customFoods: state.customFoods, currentTab: state.currentTab,
     }));
   } catch (e) {}
 }
@@ -44,6 +44,7 @@ function loadState() {
       if (parsed.weight !== undefined) state.weight = parsed.weight;
       if (parsed.entries) state.entries = parsed.entries;
       if (parsed.customFoods) state.customFoods = parsed.customFoods;
+      if (parsed.currentTab) state.currentTab = parsed.currentTab;
       if (parsed.profile) {
         const savedAvatar = parsed.profile.avatar;
         state.profile = { ...state.profile, ...parsed.profile };

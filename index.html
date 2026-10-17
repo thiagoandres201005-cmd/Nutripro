@@ -6,23 +6,8 @@
   <meta name="theme-color" content="#0a0a0b">
   <title>SomaAi</title>
   <link rel="stylesheet" href="./core.css">
-  <style>
-    #debug-panel {
-      position: fixed; top: 0; left: 0; right: 0;
-      background: #001a00; color: #0f0;
-      padding: 10px; font-size: 10px; font-family: monospace;
-      z-index: 99999; max-height: 60vh; overflow-y: auto;
-      border-bottom: 2px solid #0f0;
-      line-height: 1.4;
-    }
-    #debug-panel .err { color: #f00; font-weight: bold; }
-    #debug-panel .warn { color: #ff0; }
-    #debug-panel .info { color: #0ff; }
-    #debug-panel .ok { color: #0f0; font-weight: bold; }
-  </style>
 </head>
 <body>
-  <div id="debug-panel"><div>🔍 Iniciando diagnóstico...</div></div>
   <div id="splash-screen" class="splash">
     <div style="text-align:center">
       <div class="splash-logo">S</div>
@@ -33,70 +18,23 @@
     </div>
   </div>
   <div id="app-root"></div>
-  
   <script>
-    (function() {
-      var dbg = document.getElementById('debug-panel');
-      function log(msg, type) {
-        var cls = type || 'info';
-        var time = new Date().toLocaleTimeString();
-        if (dbg) {
-          dbg.innerHTML += '<div class="' + cls + '">[' + time + '] ' + msg + '</div>';
-          dbg.scrollTop = dbg.scrollHeight;
-        }
-        console.log('[' + cls.toUpperCase() + ']', msg);
+    // Ocultar splash siempre después de 2.5s
+    setTimeout(function() {
+      var splash = document.getElementById('splash-screen');
+      if (splash) {
+        splash.style.transition = 'opacity 0.5s ease';
+        splash.style.opacity = '0';
+        setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 500);
       }
-      window._log = log;
-      
-      // Capturar errores ANTES de que se carguen los módulos
-      window.addEventListener('error', function(e) {
-        log('ERROR: ' + e.message + ' @ ' + (e.filename || '').split('/').pop() + ':' + e.lineno, 'err');
-      });
-      window.addEventListener('unhandledrejection', function(e) {
-        var msg = e.reason && e.reason.message ? e.reason.message : String(e.reason);
-        log('PROMISE: ' + msg, 'err');
-      });
-      
-      log('✓ Script inline cargado', 'ok');
-      log('User Agent: ' + navigator.userAgent.substring(0, 60), 'info');
-      
-      // OCULTAR SPLASH SIEMPRE después de 2.5s
-      setTimeout(function() {
-        var splash = document.getElementById('splash-screen');
-        if (splash) {
-          splash.style.transition = 'opacity 0.5s ease';
-          splash.style.opacity = '0';
-          setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 500);
-          log('✓ Splash ocultado', 'ok');
-        }
-      }, 2500);
-      
-      // Diagnóstico a los 3s
-      setTimeout(function() {
-        log('--- DIAGNÓSTICO ---', 'info');
-        log('Capacitor: ' + (window.Capacitor ? 'SI' : 'NO'), window.Capacitor ? 'ok' : 'warn');
-        if (window.Capacitor && window.Capacitor.isNativePlatform) {
-          log('Native: ' + window.Capacitor.isNativePlatform(), 'ok');
-          log('Platform: ' + (window.Capacitor.getPlatform ? window.Capacitor.getPlatform() : '?'), 'info');
-        }
-        log('SomaAi: ' + (window.SomaAi ? 'SI' : 'NO'), window.SomaAi ? 'ok' : 'err');
-        log('SomaAiProfile: ' + (window.SomaAiProfile ? 'SI' : 'NO'), window.SomaAiProfile ? 'ok' : 'err');
-        log('SomaAiFeatures: ' + (window.SomaAiFeatures ? 'SI' : 'NO'), window.SomaAiFeatures ? 'ok' : 'err');
-        log('SomaAiCamera: ' + (window.SomaAiCamera ? 'SI' : 'NO'), window.SomaAiCamera ? 'ok' : 'err');
-        log('SomaAiOnboarding: ' + (window.SomaAiOnboarding ? 'SI' : 'NO'), window.SomaAiOnboarding ? 'ok' : 'err');
-        log('SomaAiSearch: ' + (window.SomaAiSearch ? 'SI' : 'NO'), window.SomaAiSearch ? 'ok' : 'err');
-        var root = document.getElementById('app-root');
-        log('app-root hijos: ' + (root ? root.children.length : 'no existe'), root && root.children.length > 0 ? 'ok' : 'warn');
-      }, 3000);
-    })();
+    }, 2500);
   </script>
-  
-  <script type="module" src="./utils.js" onerror="window._log && window._log('❌ Error cargando utils.js', 'err')"></script>
-  <script type="module" src="./features.js" onerror="window._log && window._log('❌ Error cargando features.js', 'err')"></script>
-  <script type="module" src="./core.js" onerror="window._log && window._log('❌ Error cargando core.js', 'err')"></script>
-  <script type="module" src="./onboarding.js" onerror="window._log && window._log('❌ Error cargando onboarding.js', 'err')"></script>
-  <script type="module" src="./search.js" onerror="window._log && window._log('❌ Error cargando search.js', 'err')"></script>
-  <script type="module" src="./profile.js" onerror="window._log && window._log('❌ Error cargando profile.js', 'err')"></script>
-  <script type="module" src="./camera.js" onerror="window._log && window._log('❌ Error cargando camera.js', 'err')"></script>
+  <script type="module" src="./utils.js"></script>
+  <script type="module" src="./features.js"></script>
+  <script type="module" src="./core.js"></script>
+  <script type="module" src="./onboarding.js"></script>
+  <script type="module" src="./search.js"></script>
+  <script type="module" src="./profile.js"></script>
+  <script type="module" src="./camera.js"></script>
 </body>
 </html>
