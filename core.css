@@ -1011,3 +1011,57 @@ img {
 .grid.g-4 {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
+
+/* ============ MEJORAS GENERALES DE ESTÉTICA ============ */
+.card {
+  border-radius: 18px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-pad {
+  padding: 18px !important;
+}
+.h1 { letter-spacing: -0.03em; line-height: 1.1; }
+.h2 { letter-spacing: -0.02em; line-height: 1.2; font-size: 17px; }
+.eyebrow {
+  font-size: 10px !important;
+  letter-spacing: 0.08em !important;
+  font-weight: 800 !important;
+}
+.btn {
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+}
+.btn-sm { font-size: 11px !important; }
+.pill {
+  padding: 5px 10px !important;
+  font-size: 10px !important;
+  font-weight: 700;
+}
+.mono { font-variant-numeric: tabular-nums; }
+
+/* Stack spacing óptimo */
+.stack > * { margin-bottom: 14px; }
+.stack > *:last-child { margin-bottom: 0; }
+
+/* Nav mejorado */
+nav {
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Header sticky */
+header.top {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Inputs */
+.input-field {
+  border-radius: 12px !important;
+  font-size: 15px !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field:focus {
+  border-color: var(--green) !important;
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.12) !important;
+  outline: none;
+}

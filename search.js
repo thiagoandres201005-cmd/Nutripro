@@ -145,7 +145,7 @@ function renderSearch() {
       SEARCH_STATE.category = cat.id;
       SEARCH_STATE.categoryFoods = {};
       S.haptic();
-      render();
+      if (S.render) S.render();
     };
     chipsContainer.appendChild(chip);
   });
