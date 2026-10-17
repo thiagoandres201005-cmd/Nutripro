@@ -314,26 +314,26 @@ function renderHoy() {
   const row = el('div', { class: 'grid g-2 fade-in-up', style: { gap: '12px' } });
   const waterCard = el('div', { class: 'card card-pad' });
   waterCard.innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
       '<div class="eyebrow">💧 Agua</div>' +
       '<div class="muted2" style="font-size:11px">' + state.water + ' / ' + targets.water + ' ml</div>' +
     '</div>' +
-    '<div style="display:flex;justify-content:center;margin:16px 0">' +
-      '<div style="position:relative;width:100px;height:100px">' +
+    '<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">' +
+      '<div style="position:relative;width:80px;height:80px;flex-shrink:0">' +
         '<svg viewBox="0 0 100 100" style="width:100%;height:100%;transform:rotate(-90deg)">' +
           '<circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="8"/>' +
           '<circle cx="50" cy="50" r="42" fill="none" stroke="var(--cyan)" stroke-width="8" stroke-linecap="round" stroke-dasharray="263.89" stroke-dashoffset="' + (263.89 * (1 - waterPct / 100)).toFixed(1) + '" style="transition:stroke-dashoffset .6s ease"/>' +
         '</svg>' +
-        '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">' +
-          '<div class="mono" style="font-size:22px;font-weight:800;color:var(--cyan);line-height:1">' + waterPct + '%</div>' +
+        '<div style="position:absolute;inset:0;display:grid;place-items:center">' +
+          '<div class="mono" style="font-size:18px;font-weight:800;color:var(--cyan)">' + waterPct + '%</div>' +
         '</div>' +
       '</div>' +
+      '<div style="flex:1;display:flex;flex-direction:column;gap:8px">' +
+        '<button class="btn btn-primary" data-water="250" style="height:40px;font-size:13px;border-radius:12px">+250 ml</button>' +
+        '<button class="btn btn-primary" data-water="500" style="height:40px;font-size:13px;border-radius:12px">+500 ml</button>' +
+      '</div>' +
     '</div>' +
-    '<div style="display:flex;gap:6px">' +
-      '<button class="btn btn-primary" data-water="250" style="flex:1;height:40px;font-size:12px">+250</button>' +
-      '<button class="btn btn-primary" data-water="500" style="flex:1;height:40px;font-size:12px">+500</button>' +
-      '<button class="btn btn-ghost" data-water-reset style="width:44px;height:40px;padding:0;font-size:16px">↺</button>' +
-    '</div>';
+    '<button class="btn btn-ghost" data-water-reset style="width:100%;height:32px;font-size:11px;color:var(--muted2);border-radius:10px">↺ Reiniciar</button>';
   row.appendChild(waterCard);
 
   const weightCard = el('div', { class: 'card card-pad' });
