@@ -1188,3 +1188,93 @@ body.light-theme .chip-btn:not(.active) {
   text-align: center !important;
   line-height: 1.2 !important;
 }
+
+/* ============ FIX INPUTS Y SELECTS ============ */
+.input-field,
+select.input-field,
+input.input-field,
+textarea.input-field {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  font-size: 14px !important;
+  font-family: inherit !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Select con flecha custom */
+select.input-field {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a7b3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 12px !important;
+  padding-right: 36px !important;
+}
+
+/* Opciones del select */
+select.input-field option {
+  background-color: var(--card) !important;
+  color: var(--text) !important;
+  padding: 10px !important;
+}
+
+/* Focus */
+.input-field:focus,
+select.input-field:focus,
+input.input-field:focus {
+  border-color: var(--green) !important;
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.15) !important;
+  outline: none !important;
+}
+
+/* Placeholder */
+.input-field::placeholder {
+  color: var(--muted2) !important;
+}
+
+/* Modo claro: input y select con fondo claro pero texto oscuro */
+body.light-theme .input-field,
+body.light-theme select.input-field,
+body.light-theme input.input-field,
+body.light-theme textarea.input-field {
+  background-color: #ffffff !important;
+  color: #0a0a0b !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+body.light-theme select.input-field {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+}
+body.light-theme select.input-field option {
+  background-color: #ffffff !important;
+  color: #0a0a0b !important;
+}
+
+/* Quitar estilos nativos del navegador */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+input[type="number"] {
+  -moz-appearance: textfield !important;
+}
+
+/* ============ FIX MODAL SELECTS ============ */
+.modal select, .modal input {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  font-size: 14px !important;
+}
+.modal select option {
+  background-color: var(--card) !important;
+  color: var(--text) !important;
+}
