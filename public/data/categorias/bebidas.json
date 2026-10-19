@@ -3,16 +3,22 @@
   "label": "Bebidas",
   "foods": [
     { "id": "beb_agua", "name": "Agua mineral", "emoji": "💧", "kcal": 0, "p": 0, "c": 0, "f": 0 },
-    { "id": "beb_coca_cola", "name": "Coca-Cola", "emoji": "🥤", "kcal": 42, "p": 0, "c": 10.6, "f": 0, "brand": "Coca-Cola" },
-    { "id": "beb_coca_zero", "name": "Coca-Cola Zero", "emoji": "🥤", "kcal": 0, "p": 0, "c": 0, "f": 0, "brand": "Coca-Cola" },
-    { "id": "beb_pepsi", "name": "Pepsi", "emoji": "🥤", "kcal": 43, "p": 0, "c": 11, "f": 0, "brand": "Pepsi" },
-    { "id": "beb_sprite", "name": "Sprite", "emoji": "🥤", "kcal": 39, "p": 0, "c": 10, "f": 0, "brand": "Sprite" },
-    { "id": "beb_fanta", "name": "Fanta naranja", "emoji": "🥤", "kcal": 46, "p": 0, "c": 11.5, "f": 0, "brand": "Fanta" },
-    { "id": "beb_jugo_naranja", "name": "Jugo de naranja natural", "emoji": "🍊", "kcal": 45, "p": 0.7, "c": 10, "f": 0.2 },
+    { "id": "beb_coca_cola", "name": "Coca-Cola", "emoji": "🥤", "kcal": 42, "p": 0, "c": 10.6, "f": 0 },
+    { "id": "beb_coca_zero", "name": "Coca-Cola Zero", "emoji": "🥤", "kcal": 0, "p": 0, "c": 0, "f": 0 },
+    { "id": "beb_pepsi", "name": "Pepsi", "emoji": "🥤", "kcal": 43, "p": 0, "c": 11, "f": 0 },
+    { "id": "beb_sprite", "name": "Sprite", "emoji": "🥤", "kcal": 39, "p": 0, "c": 10, "f": 0 },
+    { "id": "beb_fanta", "name": "Fanta naranja", "emoji": "🥤", "kcal": 46, "p": 0, "c": 11.5, "f": 0 },
+    { "id": "beb_jugo_naranja", "name": "Jugo de naranja", "emoji": "🍊", "kcal": 45, "p": 0.7, "c": 10, "f": 0.2 },
+    { "id": "beb_jugo_manzana", "name": "Jugo de manzana", "emoji": "🍎", "kcal": 46, "p": 0.1, "c": 11, "f": 0.1 },
     { "id": "beb_cerveza", "name": "Cerveza rubia", "emoji": "🍺", "kcal": 43, "p": 0.5, "c": 3.6, "f": 0 },
+    { "id": "beb_cerveza_negra", "name": "Cerveza negra", "emoji": "🍺", "kcal": 55, "p": 0.6, "c": 5, "f": 0 },
     { "id": "beb_vino_tinto", "name": "Vino tinto", "emoji": "🍷", "kcal": 85, "p": 0.1, "c": 2.6, "f": 0 },
-    { "id": "beb_cafe", "name": "Café negro", "emoji": "☕", "kcal": 2, "p": 0.1, "c": 0, "f": 0 },
+    { "id": "beb_vino_blanco", "name": "Vino blanco", "emoji": "🥂", "kcal": 82, "p": 0.1, "c": 2.6, "f": 0 },
+    { "id": "beb_cafe_negro", "name": "Café negro", "emoji": "☕", "kcal": 2, "p": 0.1, "c": 0, "f": 0 },
+    { "id": "beb_cafe_leche", "name": "Café con leche", "emoji": "☕", "kcal": 35, "p": 2, "c": 3, "f": 1.5 },
     { "id": "beb_te", "name": "Té", "emoji": "🍵", "kcal": 1, "p": 0, "c": 0.2, "f": 0 },
-    { "id": "beb_energizante", "name": "Bebida energizante", "emoji": "⚡", "kcal": 45, "p": 0, "c": 11, "f": 0, "brand": "Red Bull" }
+    { "id": "beb_energizante", "name": "Bebida energizante", "emoji": "⚡", "kcal": 45, "p": 0, "c": 11, "f": 0 },
+    { "id": "beb_agua_saborizada", "name": "Agua saborizada", "emoji": "💧", "kcal": 20, "p": 0, "c": 5, "f": 0 },
+    { "id": "beb_gatorade", "name": "Gatorade", "emoji": "🥤", "kcal": 24, "p": 0, "c": 6, "f": 0 }
   ]
 }

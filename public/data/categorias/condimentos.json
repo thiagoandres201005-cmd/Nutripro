@@ -11,6 +11,8 @@
     { "id": "cond_mostaza", "name": "Mostaza", "emoji": "🥫", "kcal": 66, "p": 4, "c": 5, "f": 3.4 },
     { "id": "cond_vinagre", "name": "Vinagre", "emoji": "🍶", "kcal": 20, "p": 0, "c": 0.6, "f": 0 },
     { "id": "cond_salsa_soja", "name": "Salsa de soja", "emoji": "🍶", "kcal": 53, "p": 8, "c": 4.9, "f": 0.1 },
-    { "id": "cond_oregano", "name": "Orégano", "emoji": "🌿", "kcal": 265, "p": 9, "c": 69, "f": 4.3 }
+    { "id": "cond_oregano", "name": "Orégano", "emoji": "🌿", "kcal": 265, "p": 9, "c": 69, "f": 4.3 },
+    { "id": "cond_pimienta", "name": "Pimienta negra", "emoji": "🌶️", "kcal": 251, "p": 10, "c": 64, "f": 3.3 },
+    { "id": "cond_miel", "name": "Miel", "emoji": "🍯", "kcal": 304, "p": 0.3, "c": 82, "f": 0 }
   ]
 }

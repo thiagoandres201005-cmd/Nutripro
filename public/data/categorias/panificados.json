@@ -13,6 +13,9 @@
     { "id": "pan_torta", "name": "Torta", "emoji": "🎂", "kcal": 380, "p": 5, "c": 50, "f": 18 },
     { "id": "pan_galletitas_salvado", "name": "Galletitas de salvado", "emoji": "🍪", "kcal": 430, "p": 9, "c": 68, "f": 13 },
     { "id": "pan_tostadas", "name": "Tostadas de mesa", "emoji": "🍞", "kcal": 390, "p": 11, "c": 75, "f": 5 },
-    { "id": "pan_pebete", "name": "Pebete", "emoji": "🥖", "kcal": 280, "p": 9, "c": 53, "f": 3 }
+    { "id": "pan_pebete", "name": "Pebete", "emoji": "🥖", "kcal": 280, "p": 9, "c": 53, "f": 3 },
+    { "id": "pan_scones", "name": "Scones", "emoji": "🥐", "kcal": 350, "p": 8, "c": 45, "f": 15 },
+    { "id": "pan_chipa", "name": "Chipá", "emoji": "🧀", "kcal": 340, "p": 8, "c": 35, "f": 18 },
+    { "id": "pan_prepizza", "name": "Prepizza", "emoji": "🍕", "kcal": 280, "p": 8, "c": 50, "f": 5 }
   ]
 }
