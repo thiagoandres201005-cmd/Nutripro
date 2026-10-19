@@ -1,0 +1,26 @@
+{
+  "category": "lacteos",
+  "label": "Lácteos",
+  "foods": [
+    { "id": "lact_leche_entera", "name": "Leche entera", "emoji": "🥛", "kcal": 61, "p": 3.2, "c": 4.8, "f": 3.3 },
+    { "id": "lact_leche_descremada", "name": "Leche descremada", "emoji": "🥛", "kcal": 35, "p": 3.4, "c": 5, "f": 0.1 },
+    { "id": "lact_leche_almendras", "name": "Leche de almendras", "emoji": "🥛", "kcal": 17, "p": 0.6, "c": 0.6, "f": 1.1 },
+    { "id": "lact_yogur_natural", "name": "Yogur natural", "emoji": "🥛", "kcal": 61, "p": 3.5, "c": 4.7, "f": 3.3 },
+    { "id": "lact_yogur_descremado", "name": "Yogur descremado", "emoji": "🥛", "kcal": 40, "p": 4.5, "c": 5, "f": 0.2 },
+    { "id": "lact_yogur_griego", "name": "Yogur griego", "emoji": "🥛", "kcal": 97, "p": 9, "c": 3.6, "f": 5 },
+    { "id": "lact_queso_cremoso", "name": "Queso cremoso", "emoji": "🧀", "kcal": 300, "p": 18, "c": 2, "f": 25 },
+    { "id": "lact_queso_muzarella", "name": "Queso mozzarella", "emoji": "🧀", "kcal": 280, "p": 22, "c": 2, "f": 20 },
+    { "id": "lact_queso_cheddar", "name": "Queso cheddar", "emoji": "🧀", "kcal": 400, "p": 25, "c": 1.3, "f": 33 },
+    { "id": "lact_queso_untable", "name": "Queso untable", "emoji": "🧀", "kcal": 250, "p": 6, "c": 4, "f": 23 },
+    { "id": "lact_queso_port_salut", "name": "Queso port salut", "emoji": "🧀", "kcal": 280, "p": 20, "c": 1, "f": 22 },
+    { "id": "lact_queso_parmesano", "name": "Queso parmesano", "emoji": "🧀", "kcal": 431, "p": 38, "c": 4.1, "f": 29 },
+    { "id": "lact_ricota", "name": "Ricota", "emoji": "🧀", "kcal": 174, "p": 11, "c": 3, "f": 13 },
+    { "id": "lact_crema_leche", "name": "Crema de leche", "emoji": "🥛", "kcal": 345, "p": 2, "c": 3, "f": 37 },
+    { "id": "lact_manteca", "name": "Manteca", "emoji": "🧈", "kcal": 717, "p": 0.9, "c": 0.1, "f": 81 },
+    { "id": "lact_dulce_leche", "name": "Dulce de leche", "emoji": "🍮", "kcal": 315, "p": 6, "c": 55, "f": 8 },
+    { "id": "lact_requeson", "name": "Requesón", "emoji": "🧀", "kcal": 98, "p": 11, "c": 3.4, "f": 4.3 },
+    { "id": "lact_leche_condensada", "name": "Leche condensada", "emoji": "🥛", "kcal": 321, "p": 7.9, "c": 54, "f": 8.7 },
+    { "id": "lact_crema_agria", "name": "Crema agria", "emoji": "🥛", "kcal": 193, "p": 2.4, "c": 4.6, "f": 19 },
+    { "id": "lact_queso_brie", "name": "Queso brie", "emoji": "🧀", "kcal": 334, "p": 20, "c": 0.5, "f": 28 }
+  ]
+}
