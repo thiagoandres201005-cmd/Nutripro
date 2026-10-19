@@ -2,6 +2,18 @@
    SomaAi v2.1 — Núcleo con dashboard mejorado
    ========================================================================== */
 
+const DAILY_TIPS = [
+  { icon: '💧', text: 'Tomá un vaso de agua antes de cada comida.' },
+  { icon: '🥩', text: 'La proteína te mantiene saciado. Incluila en cada comida.' },
+  { icon: '🥦', text: 'Llená la mitad de tu plato con verduras.' },
+  { icon: '😴', text: 'Dormir 7-8 horas regula las hormonas del hambre.' },
+  { icon: '🚶', text: 'Caminar 10 minutos después de comer mejora la digestión.' }
+];
+function getDailyTip() {
+  const day = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  return DAILY_TIPS[day % DAILY_TIPS.length];
+}
+
 const state = {
   version: '2.1.0',
   platform: 'web',
@@ -210,6 +222,13 @@ function renderHoy() {
   const greetingText = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
   greeting.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div><div class="muted2" style="font-size:12px;font-weight:600">' + greetingText + ',</div><div class="h2" style="margin-top:2px">' + escapeHtml(state.profile.name || 'Usuario') + ' 👋</div></div><span class="pill green" style="font-size:10px">🔥 ' + (state.profile.streak || 1) + ' días</span></div>';
   wrap.appendChild(greeting);
+
+  const tip = getDailyTip();
+  const tipCard = el('div', { class: 'card card-pad fade-in-up' });
+  tipCard.style.background = 'linear-gradient(135deg, rgba(0,255,136,.08), rgba(6,182,212,.04))';
+  tipCard.style.borderColor = 'rgba(0,255,136,.2)';
+  tipCard.innerHTML = '<div style="display:flex;gap:12px;align-items:center"><div style="font-size:24px">' + tip.icon + '</div><div><div class="eyebrow" style="color:var(--green)">Tip del día</div><div style="font-size:12px;margin-top:2px">' + tip.text + '</div></div></div>';
+  wrap.appendChild(tipCard);
 
   // Card 1: Progreso principal
   const card1 = el('div', { class: 'card card-pad fade-in-up' });
@@ -460,7 +479,7 @@ function render() {
   root.innerHTML = '';
   const app = el('div', { class: 'app' });
   const header = el('header', { class: 'top' });
-  header.innerHTML = '<div class="grad-line"></div><div class="container"><div class="row"><div class="logo"><div class="mark">S</div><div><div class="name">SomaAi</div><div class="sub">NUTRICIÓN INTELIGENTE</div></div></div><div class="top-actions"><button class="icon-btn" id="header-theme" title="Cambiar tema">🌙</button><button class="icon-btn" id="header-perfil">👤</button></div></div></div>';
+  header.innerHTML = '<div class="grad-line"></div><div class="container"><div class="row"><div class="logo"><div class="mark">S</div><div><div class="name">SomaAi</div><div class="sub">NUTRICIÓN INTELIGENTE</div></div></div><div class="top-actions"><button class="icon-btn" id="header-share" title="Compartir">📤</button><button class="icon-btn" id="header-theme" title="Cambiar tema">🌙</button><button class="icon-btn" id="header-perfil">👤</button></div></div></div>';
   app.appendChild(header);
 
   const main = el('main');
@@ -505,6 +524,23 @@ function render() {
 
   const headerPerfil = document.getElementById('header-perfil');
   if (headerPerfil) headerPerfil.onclick = () => { haptic(); state.currentTab = 'perfil'; render(); };
+  const headerShare = document.getElementById('header-share');
+  if (headerShare) {
+    headerShare.onclick = async () => {
+      haptic();
+      const targets = calcTargets(state.profile);
+      const totals = calcTotals(state.entries);
+      const text = 'SomaAi - Mi día:\n📊 ' + totals.kcal + '/' + targets.kcal + ' kcal\n🥩 P: ' + totals.p + 'g\n💧 Agua: ' + state.water + 'ml\n🔥 Racha: ' + (state.profile.streak || 1) + ' días';
+      try {
+        const { Share } = await import('@capacitor/share');
+        await Share.share({ title: 'Mi progreso', text: text });
+      } catch (e) {
+        if (navigator.share) { navigator.share({ title: 'SomaAi', text: text }).catch(()=>{}); }
+        else { navigator.clipboard.writeText(text); toast('📋 Copiado al portapapeles'); }
+      }
+    };
+  }
+
   const headerTheme = document.getElementById('header-theme');
   if (headerTheme) {
     // Actualizar icono según el tema actual
